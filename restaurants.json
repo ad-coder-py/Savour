@@ -1,0 +1,228 @@
+[
+  {
+    "id": 1,
+    "name": "Spicy Villa",
+    "cuisine": "Indian",
+    "budget": "Medium",
+    "rating": 4.5,
+    "facilities": [
+      "AC",
+      "Parking",
+      "Wi-Fi"
+    ],
+    "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+    "coords": {
+      "lat": 12.9716,
+      "lng": 77.5946
+    },
+    "isVeg": false,
+    "tags": [
+      "Spicy",
+      "Curry",
+      "Family"
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Burger Barn",
+    "cuisine": "American",
+    "budget": "Low",
+    "rating": 4.0,
+    "facilities": [
+      "AC",
+      "Parking"
+    ],
+    "image": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+    "coords": {
+      "lat": 12.9780,
+      "lng": 77.6000
+    },
+    "isVeg": false,
+    "tags": [
+      "Burgers",
+      "Fast Food",
+      "Cheesy"
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Sushi World",
+    "cuisine": "Japanese",
+    "budget": "High",
+    "rating": 4.8,
+    "facilities": [
+      "AC",
+      "Parking",
+      "Private Dining"
+    ],
+    "image": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+    "coords": {
+      "lat": 12.9600,
+      "lng": 77.5800
+    },
+    "isVeg": false,
+    "tags": [
+      "Sushi",
+      "Authentic",
+      "Premium"
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Pasta Point",
+    "cuisine": "Italian",
+    "budget": "Medium",
+    "rating": 4.2,
+    "facilities": [
+      "AC",
+      "Wi-Fi"
+    ],
+    "image": "https://images.unsplash.com/photo-1481931098730-318b6f776db0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+    "coords": {
+      "lat": 12.9850,
+      "lng": 77.5900
+    },
+    "isVeg": true,
+    "tags": [
+      "Pasta",
+      "Vegetarian Friendly",
+      "Cozy"
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Taco Fiesta",
+    "cuisine": "Mexican",
+    "budget": "Low",
+    "rating": 4.3,
+    "facilities": [
+      "Outdoor Seating"
+    ],
+    "image": "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+    "coords": {
+      "lat": 12.9700,
+      "lng": 77.6100
+    },
+    "isVeg": false,
+    "tags": [
+      "Tacos",
+      "Spicy",
+      "Quick"
+    ]
+  },
+  {
+    "id": 6,
+    "name": "The Golden Dragon",
+    "cuisine": "Chinese",
+    "budget": "Medium",
+    "rating": 4.1,
+    "facilities": [
+      "AC",
+      "Parking",
+      "Banquet"
+    ],
+    "image": "https://images.unsplash.com/photo-1525164286253-04e68b9d94c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+    "coords": {
+      "lat": 12.9550,
+      "lng": 77.5950
+    },
+    "isVeg": false,
+    "tags": [
+      "Noodles",
+      "Dim Sum",
+      "Family"
+    ]
+  },
+  {
+    "id": 7,
+    "name": "Cafe Mocha",
+    "cuisine": "Cafe",
+    "budget": "Low",
+    "rating": 4.6,
+    "facilities": [
+      "Wi-Fi",
+      "AC",
+      "Books"
+    ],
+    "image": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+    "coords": {
+      "lat": 12.9650,
+      "lng": 77.5850
+    },
+    "isVeg": true,
+    "tags": [
+      "Coffee",
+      "Books",
+      "Relaxed"
+    ]
+  },
+  {
+    "id": 8,
+    "name": "Royal Feast",
+    "cuisine": "Indian",
+    "budget": "High",
+    "rating": 4.9,
+    "facilities": [
+      "AC",
+      "Parking",
+      "Valet",
+      "Live Music"
+    ],
+    "image": "https://images.unsplash.com/photo-1585937421612-70a008356f36?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+    "coords": {
+      "lat": 12.9900,
+      "lng": 77.6200
+    },
+    "isVeg": false,
+    "tags": [
+      "Royal",
+      "Buffet",
+      "Luxury"
+    ]
+  },
+  {
+    "id": 9,
+    "name": "Green Greens",
+    "cuisine": "Continental",
+    "budget": "Medium",
+    "rating": 4.4,
+    "facilities": [
+      "Wi-Fi",
+      "Outdoor Seating"
+    ],
+    "image": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+    "coords": {
+      "lat": 12.9750,
+      "lng": 77.5900
+    },
+    "isVeg": true,
+    "tags": [
+      "Healthy",
+      "Salads",
+      "Vegan"
+    ]
+  },
+  {
+    "id": 10,
+    "name": "Mediterranean Mind",
+    "cuisine": "Mediterranean",
+    "budget": "High",
+    "rating": 4.7,
+    "facilities": [
+      "AC",
+      "Parking",
+      "Rooftop"
+    ],
+    "image": "https://images.unsplash.com/photo-1544148103-0773bf10d330?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+    "coords": {
+      "lat": 12.9600,
+      "lng": 77.6050
+    },
+    "isVeg": false,
+    "tags": [
+      "Hummus",
+      "Falafel",
+      "View"
+    ]
+  }
+]
