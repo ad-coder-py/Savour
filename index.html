@@ -1,3 +1,6 @@
+index.html
+
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 
@@ -58,7 +61,10 @@
                 <button id="theme-toggle" class="btn-icon" aria-label="Toggle Theme">
                     <i class="fas fa-moon"></i>
                 </button>
-                <button id="login-btn" class="btn-login">Login</button>
+                <a href="owner.html" class="btn-ghost"
+                    style="text-decoration:none; margin-right:1rem; font-weight:600; color:var(--text-main);">Partner
+                    Login</a>
+                <button id="login-btn" class="btn-login">User Login</button>
             </div>
         </div>
     </header>
@@ -146,17 +152,17 @@
                     <h4>Essentials</h4>
                     <div class="checkbox-grid">
                         <label class="custom-checkbox">
-                            <input type="checkbox" onchange="toggleFilterFacility('AC')">
+                            <input type="checkbox" value="AC" onchange="toggleFilterFacility('AC')">
                             <span class="checkmark"><i class="fas fa-snowflake"></i></span>
                             <span class="label-text">AC</span>
                         </label>
                         <label class="custom-checkbox">
-                            <input type="checkbox" onchange="toggleFilterFacility('Parking')">
+                            <input type="checkbox" value="Parking" onchange="toggleFilterFacility('Parking')">
                             <span class="checkmark"><i class="fas fa-car"></i></span>
                             <span class="label-text">Parking</span>
                         </label>
                         <label class="custom-checkbox">
-                            <input type="checkbox" onchange="toggleFilterFacility('Wi-Fi')">
+                            <input type="checkbox" value="Wi-Fi" onchange="toggleFilterFacility('Wi-Fi')">
                             <span class="checkmark"><i class="fas fa-wifi"></i></span>
                             <span class="label-text">Wi-Fi</span>
                         </label>

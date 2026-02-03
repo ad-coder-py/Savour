@@ -185,23 +185,43 @@ window.toggleFilterFacility = (fac) => {
     if (idx > -1) appState.preferences.amenities.splice(idx, 1);
     else appState.preferences.amenities.push(fac);
 };
-// --- Result Calculation ---
+// --- Result Calculation (API Integration) ---
 function calculateResults() {
-    const { restaurants } = appState;
-    const { cuisine, diet, budget, minRating, amenities } = appState.preferences;
-    const scores = restaurants.map(r => {
-        let score = 0;
-        if (r.cuisine === cuisine) score += 50; else score -= 1000;
-        if (diet === 'Veg' && !r.isVeg) return { ...r, score: -9999 };
-        if (r.rating < minRating) return { ...r, score: -9999 };
-        const diff = Math.abs((r.budget === 'Low' ? 300 : r.budget === 'Medium' ? 800 : 2000) - budget);
-        if (diff < 300) score += 20;
-        const matchCount = amenities.filter(a => r.facilities.includes(a)).length;
-        score += (matchCount * 10);
-        return { ...r, score };
+    // Show Loading State
+    const container = document.getElementById('results-container');
+    container.innerHTML = '<div style="grid-column:1/-1; text-align:center;"><i class="fas fa-spinner fa-spin" style="font-size:3rem; color:var(--primary);"></i><p style="margin-top:1rem;">Finding best spots...</p></div>';
+    // Get Location
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
+    navigator.geolocation.getCurrentPosition((position) => {
+        const payload = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            budget: appState.preferences.budget,
+            cuisine: appState.preferences.cuisine,
+            amenities: appState.preferences.amenities
+        };
+        // Call Backend
+        fetch('http://localhost:3000/api/recommend', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                appState.restaurants = data; // Store results
+                renderResults(data);
+            })
+            .catch(err => {
+                console.error(err);
+                container.innerHTML = '<p style="text-align:center; color:red;">Failed to fetch recommendations. Is server running?</p>';
+            });
+    }, (error) => {
+        alert("Unable to retrieve your location.");
+        container.innerHTML = '<p style="text-align:center;">Location access denied.</p>';
     });
-    const final = scores.filter(r => r.score > 0).sort((a, b) => b.score - a.score);
-    renderResults(final);
 }
 function renderResults(list) {
     const container = document.getElementById('results-container');
@@ -210,30 +230,39 @@ function renderResults(list) {
         container.innerHTML = `
             <div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-muted);">
                 <i class="fas fa-search" style="font-size:3rem; margin-bottom:1rem; opacity:0.5;"></i>
-                <h3>No perfect match found.</h3>
-                <p>Try adjusting your filters (especially Cuisine).</p>
+                <h3>No perfect match found nearby.</h3>
+                <p>Try adjusting your filters or ensure restaurants are registered in the Partner Portal.</p>
             </div>
         `;
         return;
     }
     list.forEach(r => {
+        // Map Google/DB data to card
+        // Image: Use Google Photo or Fallback
+        let thumb = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500";
+        if (r.photos && r.photos.length > 0) {
+            // Note: Needs API Key for photo reference, simplified for now or rely on fallback
+            // thumb = ... (complex URL construction)
+        }
         const div = document.createElement('div');
         div.className = 'restaurant-card';
+        // Handle facilities array safely
+        const tags = r.facilities || [];
         div.innerHTML = `
             <div class="card-image-wrap">
-                <img src="${r.image}" alt="${r.name}">
-                <span class="card-rating">${r.rating} ★</span>
+                <img src="${thumb}" alt="${r.name}">
+                <span class="card-rating">${r.rating || 'N/A'} ★</span>
             </div>
             <div class="card-content">
                 <h3 class="card-title">${r.name}</h3>
                 <div class="card-meta">
-                    <span>${r.cuisine} • ${r.budget}</span>
+                    <span>${r.cuisine || 'Restaurant'} • ${r.budget || 'Medium'}</span>
                     <span>${r.isVeg ? '<span style="color:var(--success)">Pure Veg</span>' : 'Veg/Non-Veg'}</span>
                 </div>
                 <div class="tag-row">
-                    ${r.facilities.slice(0, 3).map(f => `<span class="tag">${f}</span>`).join('')}
+                    ${tags.slice(0, 3).map(f => `<span class="tag">${f}</span>`).join('')}
                 </div>
-                <button class="view-btn" onclick="openDetails(${r.id})">View Details</button>
+                <button class="view-btn" onclick="openDetails('${r.place_id}')">View Details</button>
             </div>
         `;
         div.onmouseenter = () => document.body.classList.add('hover-magnet');
@@ -242,22 +271,35 @@ function renderResults(list) {
     });
 }
 // --- Detailed View Logic ---
+// --- Detailed View Logic ---
 window.openDetails = (id) => {
-    const r = appState.restaurants.find(item => item.id === id);
+    // id is now a string (Google Place ID)
+    // Find in appState or use Id directly
+    const r = appState.restaurants.find(item => item.place_id === id);
     if (!r) return;
+    // Generate pseudo-random index from string ID logic to prevent crash
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const safeIndex = Math.abs(hash);
     // Generate random data for demo
-    const chef = chefNames[id % chefNames.length];
-    const randReviews = [reviewTexts[id % reviewTexts.length], reviewTexts[(id + 1) % reviewTexts.length]];
-    const famous = [famousDishes[id % famousDishes.length], famousDishes[(id + 1) % famousDishes.length]];
+    const chef = chefNames[safeIndex % chefNames.length];
+    const randReviews = [reviewTexts[safeIndex % reviewTexts.length], reviewTexts[(safeIndex + 1) % reviewTexts.length]];
+    const famous = [famousDishes[safeIndex % famousDishes.length], famousDishes[(safeIndex + 1) % famousDishes.length]];
     const modalBody = document.getElementById('details-body');
+    const facilities = r.facilities || [];
+    // Coordinates might be geometry.location or enriched coords
+    const lat = r.geometry ? r.geometry.location.lat : 0;
+    const lng = r.geometry ? r.geometry.location.lng : 0;
     modalBody.innerHTML = `
         <div class="details-hero">
-            <img src="${r.image}" alt="${r.name}">
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800" alt="${r.name}">
             <div class="details-overlay">
                 <h1 style="font-size:2.5rem; font-family:var(--font-heading);">${r.name}</h1>
-                <p style="opacity:0.9; margin-bottom:0.5rem;">${r.cuisine} | ${r.budget} | ${r.coords.lat.toFixed(2)}, ${r.coords.lng.toFixed(2)}</p>
+                <p style="opacity:0.9; margin-bottom:0.5rem;">${r.cuisine || 'Restaurant'} | ${r.budget || 'Medium'} | ${lat.toFixed(4)}, ${lng.toFixed(4)}</p>
                 <div class="tag-row">
-                    ${r.facilities.map(f => `<span class="tag" style="background:rgba(255,255,255,0.2); color:white;">${f}</span>`).join('')}
+                    ${facilities.map(f => `<span class="tag" style="background:rgba(255,255,255,0.2); color:white;">${f}</span>`).join('')}
                 </div>
             </div>
         </div>
@@ -265,7 +307,7 @@ window.openDetails = (id) => {
         <div class="details-header">
             <div style="display:flex; gap:1rem; margin-bottom:1.5rem;">
                 <button class="btn-primary-glow" style="padding:0.8rem 2rem; border-radius:12px; border:none; color:white; font-weight:600; cursor:pointer;">Book a Table</button>
-                <button style="padding:0.8rem 2rem; border-radius:12px; border:2px solid var(--border); background:transparent; font-weight:600; cursor:pointer;" onclick="alert('Navigating...')">Navigate</button>
+                <button style="padding:0.8rem 2rem; border-radius:12px; border:2px solid var(--border); background:transparent; font-weight:600; cursor:pointer; color:var(--text-main);" onclick="alert('Navigating...')">Navigate</button>
             </div>
         </div>
         <div class="details-grid">
@@ -285,7 +327,7 @@ window.openDetails = (id) => {
                 
                 <h3 style="margin-top:2rem; margin-bottom:1rem;">About the Chef</h3>
                 <div class="chef-section">
-                    <img src="https://i.pravatar.cc/150?u=${id}" class="chef-avatar" alt="Chef">
+                    <img src="https://i.pravatar.cc/150?u=${safeIndex}" class="chef-avatar" alt="Chef">
                     <div>
                         <h4 style="margin:0;">Chef ${chef}</h4>
                         <p style="font-size:0.9rem; color:var(--text-muted);">Executive Chef • 12 Years Exp</p>
@@ -334,16 +376,6 @@ function updateThemeIcon(t) {
 }
 // --- Data (Inlined) ---
 function loadRestaurants() {
-    appState.restaurants = [
-        { "id": 1, "name": "Spicy Villa", "cuisine": "Indian", "budget": "Medium", "rating": 4.5, "facilities": ["AC", "Parking", "Wi-Fi"], "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", "coords": { "lat": 12.9716, "lng": 77.5946 }, "isVeg": false },
-        { "id": 2, "name": "Burger Barn", "cuisine": "American", "budget": "Low", "rating": 4.0, "facilities": ["AC", "Parking"], "image": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", "coords": { "lat": 12.9780, "lng": 77.6000 }, "isVeg": false },
-        { "id": 3, "name": "Sushi World", "cuisine": "Japanese", "budget": "High", "rating": 4.8, "facilities": ["AC", "Parking", "Private Dining"], "image": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", "coords": { "lat": 12.9600, "lng": 77.5800 }, "isVeg": false },
-        { "id": 4, "name": "Pasta Point", "cuisine": "Italian", "budget": "Medium", "rating": 4.2, "facilities": ["AC", "Wi-Fi"], "image": "https://images.unsplash.com/photo-1481931098730-318b6f776db0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", "coords": { "lat": 12.9850, "lng": 77.5900 }, "isVeg": true },
-        { "id": 5, "name": "Taco Fiesta", "cuisine": "Mexican", "budget": "Low", "rating": 4.3, "facilities": ["Outdoor Seating"], "image": "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", "coords": { "lat": 12.9700, "lng": 77.6100 }, "isVeg": false },
-        { "id": 6, "name": "The Golden Dragon", "cuisine": "Chinese", "budget": "Medium", "rating": 4.1, "facilities": ["AC", "Parking", "Banquet"], "image": "https://images.unsplash.com/photo-1525164286253-04e68b9d94c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", "coords": { "lat": 12.9550, "lng": 77.5950 }, "isVeg": false },
-        { "id": 7, "name": "Cafe Mocha", "cuisine": "Cafe", "budget": "Low", "rating": 4.6, "facilities": ["Wi-Fi", "AC", "Books"], "image": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", "coords": { "lat": 12.9650, "lng": 77.5850 }, "isVeg": true },
-        { "id": 8, "name": "Royal Feast", "cuisine": "Indian", "budget": "High", "rating": 4.9, "facilities": ["AC", "Parking", "Valet", "Live Music"], "image": "https://images.unsplash.com/photo-1585937421612-70a008356f36?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", "coords": { "lat": 12.9900, "lng": 77.6200 }, "isVeg": false },
-        { "id": 9, "name": "Green Greens", "cuisine": "Continental", "budget": "Medium", "rating": 4.4, "facilities": ["Wi-Fi", "Outdoor Seating"], "image": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", "coords": { "lat": 12.9750, "lng": 77.5900 }, "isVeg": true },
-        { "id": 10, "name": "Mediterranean Mind", "cuisine": "Mediterranean", "budget": "High", "rating": 4.7, "facilities": ["AC", "Parking", "Rooftop"], "image": "https://images.unsplash.com/photo-1544148103-0773bf10d330?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", "coords": { "lat": 12.9600, "lng": 77.6050 }, "isVeg": false }
-    ];
+    // Replaced by API
+    appState.restaurants = [];
 }

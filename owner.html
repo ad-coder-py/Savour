@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAVOUR - Partner Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Poppins:wght@300;400;600;700&family=Inter:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY_HERE&libraries=places"></script>
+    <style>
+        .owner-container {
+            max-width: 600px;
+            margin: 4rem auto;
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--background);
+            color: var(--text-main);
+            font-family: var(--font-body);
+        }
+
+        .hidden-form {
+            display: none;
+            animation: fadeInSlide 0.5s ease-out;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body class="hover-magnet">
+    <div class="bg-pattern"></div>
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                SA<div class="v-logo-container"><svg viewBox="0 0 100 100" class="v-svg">
+                        <defs>
+                            <path id="fork-shape"
+                                d="M -6 0 L -6 25 Q -6 35 0 35 Q 6 35 6 25 L 6 0 M -2 0 L -2 20 M 2 0 L 2 20 M 0 35 L 0 80"
+                                fill="none" class="v-fork" stroke-linecap="round" stroke-linejoin="round" />
+                            <path id="knife-shape" d="M 0 0 L 0 80 Q 0 80 0 80 M 0 0 Q 12 5 12 30 L 12 80 L 0 80"
+                                fill="currentColor" class="v-knife" />
+                        </defs>
+                        <g transform="translate(32, 50) rotate(-25)">
+                            <path
+                                d="M-5 -35 L-5 -10 Q-5 0 0 0 Q5 0 5 -10 L5 -35 M-2 -35 L-2 -10 M2 -35 L2 -10 M0 0 L0 35"
+                                class="v-fork" fill="none" stroke-width="4" />
+                        </g>
+                        <g transform="translate(68, 50) rotate(25)">
+                            <path d="M-6 -35 L-6 35 L6 35 L6 0 C6 -20 0 -35 -6 -35 Z" class="v-knife" />
+                        </g>
+                        <circle cx="50" cy="88" r="6" class="v-dot" />
+                    </svg></div>OUR
+            </a>
+            <div class="nav-controls">
+                <button id="theme-toggle" class="btn-icon"><i class="fas fa-moon"></i></button>
+            </div>
+        </div>
+    </header>
+    <div class="container">
+        <div class="owner-container">
+            <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Home</a>
+            <h2 style="margin-bottom:0.5rem;">Partner Portal</h2>
+            <p style="color:var(--text-muted); margin-bottom:2rem;">Claim your restaurant and boost visibility.</p>
+            <div class="form-group">
+                <label>Search Your Restaurant (Google Maps)</label>
+                <input type="text" id="place-search" placeholder="Type to search...">
+            </div>
+            <div id="rich-data-form" class="hidden-form">
+                <h3 style="margin:2rem 0 1rem 0;">Enrich Your Data</h3>
+                <div class="form-group">
+                    <label>Restaurant Name</label>
+                    <input type="text" id="r-name" readonly style="opacity:0.7;">
+                </div>
+                <div class="form-group">
+                    <label>Cuisine Type</label>
+                    <select id="r-cuisine">
+                        <option value="Indian">Indian</option>
+                        <option value="Chinese">Chinese</option>
+                        <option value="Italian">Italian</option>
+                        <option value="Mexican">Mexican</option>
+                        <option value="American">American</option>
+                        <option value="Japanese">Japanese</option>
+                        <option value="Cafe">Cafe</option>
+                        <option value="Mediterranean">Mediterranean</option>
+                        <option value="Continental">Continental</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Budget Range</label>
+                    <select id="r-budget">
+                        <option value="Low">Low (~₹300)</option>
+                        <option value="Medium">Medium (~₹800)</option>
+                        <option value="High">High (~₹2000+)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Dietary</label>
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <input type="checkbox" id="r-isVeg" style="width:auto;">
+                        <span>Pure Veg Only?</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Amenities</label>
+                    <div class="checkbox-grid">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" value="AC" class="amenity-chk">
+                            <span class="checkmark"><i class="fas fa-snowflake"></i></span>
+                            <span class="label-text">AC</span>
+                        </label>
+                        <label class="custom-checkbox">
+                            <input type="checkbox" value="Parking" class="amenity-chk">
+                            <span class="checkmark"><i class="fas fa-car"></i></span>
+                            <span class="label-text">Parking</span>
+                        </label>
+                        <label class="custom-checkbox">
+                            <input type="checkbox" value="Wi-Fi" class="amenity-chk">
+                            <span class="checkmark"><i class="fas fa-wifi"></i></span>
+                            <span class="label-text">Wi-Fi</span>
+                        </label>
+                    </div>
+                </div>
+                <button class="btn-big btn-primary-glow" onclick="submitOwnerData()"
+                    style="width:100%; justify-content:center;">Register Business</button>
+            </div>
+        </div>
+    </div>
+    <!-- Re-use cursor logic -->
+    <script>
+        // Copy Cursor Logic from script.js (Simplified)
+        const dot = document.querySelector('.cursor-dot');
+        const outline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', (e) => {
+            dot.style.left = `${e.clientX}px`; dot.style.top = `${e.clientY}px`;
+            outline.animate({ left: `${e.clientX}px`, top: `${e.clientY}px` }, { duration: 500, fill: "forwards" });
+        });
+        // Theme Logic
+        const saved = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        document.getElementById('theme-toggle').onclick = () => {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+        };
+        // Google Places Logic
+        let selectedPlace = null;
+        function initAutocomplete() {
+            const input = document.getElementById('place-search');
+            const autocomplete = new google.maps.places.Autocomplete(input, { types: ['establishment'] });
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (!place.place_id) return;
+                selectedPlace = place;
+                document.getElementById('r-name').value = place.name;
+                document.getElementById('rich-data-form').style.display = 'block';
+            });
+        }
+        // Initialize if API loaded
+        if (typeof google !== 'undefined') initAutocomplete();
+        // Submit Logic
+        function submitOwnerData() {
+            if (!selectedPlace) return;
+            const amenities = Array.from(document.querySelectorAll('.amenity-chk:checked')).map(cb => cb.value);
+            const payload = {
+                placeId: selectedPlace.place_id,
+                name: document.getElementById('r-name').value,
+                cuisine: document.getElementById('r-cuisine').value,
+                budget: document.getElementById('r-budget').value,
+                isVeg: document.getElementById('r-isVeg').checked,
+                facilities: amenities
+            };
+            fetch('http://localhost:3000/api/owner/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert('Success! Your restaurant is now part of the Savour network.');
+                    window.location.href = 'index.html';
+                })
+                .catch(err => alert('Error saving data. check console.'));
+        }
+    </script>
+</body>
+
+</html>
