@@ -1,352 +1,299 @@
-// --- State Management ---
-const appState = {
-    step: 1,
-    preferences: {
-        budget: 500,
-        cuisine: null,
-        diet: 'Any',
-        diningMode: 'Dine-in',
-        minRating: 4.0,
-        amenities: []
-    },
-    location: null,
-    restaurants: []
-};
-// --- Mock Data Extension ---
-const chefNames = ["Marco Rossi", "Anjali Menon", "Kenji Sato", "Sarah Jenkins", "Vikram Singh"];
-const reviewTexts = [
-    "Absolutely loved the ambiance! The food was top notch.",
-    "Great service, but a bit pricey for the portion size.",
-    "A hidden gem. The chef's special is a must-try!",
-    "Perfect for family dinners. Very spacious.",
-    "The flavors were authentic and the presentation was beautiful."
-];
-const menuItems = [
-    { name: "Signature Pasta", price: "₹350", img: "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=200" },
-    { name: "Spicy Curry", price: "₹420", img: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=200" },
-    { name: "Cheese Platter", price: "₹550", img: "https://images.unsplash.com/photo-1541592618-3fa059c959f4?w=200" },
-    { name: "Fusion Tacos", price: "₹290", img: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=200" }
-];
-const famousDishes = [
-    "Truffle Risotto", "Butter Chicken", "Dragon Roll", "Molten Lava Cake"
-];
-// --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    initCursor(); // Custom Cursor Logic
-    initBudgetSlider();
-    loadRestaurants();
-    renderCuisineOptions();
-    // Login Modal Triggers
-    const loginModal = document.getElementById('login-modal');
-    document.getElementById('login-btn').addEventListener('click', () => {
-        loginModal.style.display = 'flex';
-    });
-    document.querySelector('#login-modal .close-modal').addEventListener('click', () => {
-        loginModal.style.display = 'none';
-    });
-    window.addEventListener('click', (e) => {
-        if (e.target === loginModal) loginModal.style.display = 'none';
-        if (e.target === document.getElementById('details-modal')) closeDetails();
-    });
+    try {
+        initCursor();
+        initTheme();
+        initBudgetSlider();
+        renderCuisineOptions();
+        setupLoginModals();
+    } catch (e) { console.error(e); }
 });
-// --- Custom Cursor Logic (Dot + Outline + Fruit Ninja Food Trail) ---
 function initCursor() {
     const dot = document.querySelector('.cursor-dot');
     const outline = document.querySelector('.cursor-outline');
-    // Safety check if elements exist
+    let lastX = 0, lastY = 0;
     if (!dot || !outline) return;
-    // Track mouse distance for cleaner trail
-    let lastX = 0;
-    let lastY = 0;
     window.addEventListener('mousemove', (e) => {
-        const posX = e.clientX;
-        const posY = e.clientY;
-        // Dot follows instantly
-        dot.style.left = `${posX}px`;
-        dot.style.top = `${posY}px`;
-        // Outline follows with delay
-        outline.animate({
-            left: `${posX}px`,
-            top: `${posY}px`
-        }, { duration: 500, fill: "forwards" });
-        // Spawn Food Trail (Distance Based)
-        // Calculate distance moved
-        const dist = Math.hypot(posX - lastX, posY - lastY);
-        // Threshold: Only spawn every 50px moved (Declustered)
-        if (dist > 50) {
-            createEmojiTrail(posX, posY);
-            lastX = posX;
-            lastY = posY;
+        dot.style.left = `${e.clientX}px`; dot.style.top = `${e.clientY}px`;
+        outline.animate({ left: `${e.clientX}px`, top: `${e.clientY}px` }, { duration: 500, fill: "forwards" });
+        if (Math.hypot(e.clientX - lastX, e.clientY - lastY) > 40) {
+            createEmojiTrail(e.clientX, e.clientY);
+            lastX = e.clientX; lastY = e.clientY;
         }
-    });
-    // Hover Magnet triggers
-    const interactive = document.querySelectorAll('a, button, .selection-card, input[type="range"], .toggle-btn, .restaurant-card');
-    interactive.forEach(el => {
-        el.addEventListener('mouseenter', () => document.body.classList.add('hover-magnet'));
-        el.addEventListener('mouseleave', () => document.body.classList.remove('hover-magnet'));
     });
 }
 function createEmojiTrail(x, y) {
-    const emojis = ['🍕', '🍔', '🍟', '🍩', '🥤', '🌮', '🍜', '🥗', '🍱'];
+    const emojis = ['🍕', '🍔', '🍟', '🍩', '🥤', '🌮', '🍜', '🥗', '🍱', '🥥', '🍤'];
     const el = document.createElement('div');
     el.classList.add('emoji-particle');
     el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-    // Position
-    el.style.left = `${x}px`;
-    el.style.top = `${y}px`;
-    // Improved Random Scatter
-    const angle = Math.random() * Math.PI * 2;
-    const velocity = 20 + Math.random() * 40; // Random speed
-    const tx = Math.cos(angle) * velocity;
-    const ty = Math.sin(angle) * velocity;
-    // Random interaction rotation
-    const rot = (Math.random() - 0.5) * 60; // +/- 30deg tilt
-    el.style.setProperty('--tx', `${tx}px`);
-    el.style.setProperty('--ty', `${ty}px`);
-    el.style.setProperty('--rot', `${rot}deg`);
+    el.style.left = `${x}px`; el.style.top = `${y}px`;
+    const angle = Math.random() * Math.PI * 2, velocity = 20 + Math.random() * 40;
+    el.style.setProperty('--tx', `${Math.cos(angle) * velocity}px`);
+    el.style.setProperty('--ty', `${Math.sin(angle) * velocity}px`);
+    el.style.setProperty('--rot', `${(Math.random() - 0.5) * 60}deg`);
     document.body.appendChild(el);
-    // Faster cleanup (0.6s)
-    setTimeout(() => {
-        el.remove();
-    }, 600);
+    setTimeout(() => el.remove(), 600);
 }
-// --- Navigation Flow ---
-window.nextStep = (targetStep) => {
-    if (targetStep === 3 && !appState.preferences.cuisine) {
-        alert("Please pick a cuisine to proceed!");
-        return;
+function initTheme() {
+    const toggle = document.getElementById('theme-toggle');
+    if (!toggle) return;
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    toggle.onclick = () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+    };
+}
+function setupLoginModals() {
+    const loginBtn = document.getElementById('login-btn');
+    const loginModal = document.getElementById('login-modal');
+    if (loginBtn && loginModal) {
+        loginBtn.onclick = () => loginModal.style.display = 'flex';
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.onclick = function () { this.closest('.modal').style.display = 'none'; }
+        });
     }
-    document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
-    const targetEl = document.getElementById(`step-${targetStep}`);
-    if (targetEl) {
-        targetEl.classList.add('active');
-        appState.step = targetStep;
-    } else if (targetStep === 6) {
-        showResults();
+}
+const mockRestaurants = [
+    {
+        id: "m1", name: "Spice Villa", cuisine: "Indian", budget: 800, rating: 4.5,
+        image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800",
+        vicinity: "MG Road, Center", facilities: ["AC", "Parking", "Wi-Fi"], isVeg: false,
+        lat: 9.9312, lng: 76.2673,
+        dishes: [
+            { name: "Butter Chicken", price: 350, img: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=200" },
+            { name: "Garlic Naan", price: 80, img: "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=200" },
+            { name: "Biryani", price: 250, img: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=200" }
+        ]
+    },
+    {
+        id: "m2", name: "Pizza Haven", cuisine: "Italian", budget: 600, rating: 4.2,
+        image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800",
+        vicinity: "Marine Drive", facilities: ["AC", "Wi-Fi"], isVeg: false,
+        lat: 9.9400, lng: 76.2700,
+        dishes: [
+            { name: "Margherita", price: 400, img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=200" },
+            { name: "Pasta Alfredo", price: 300, img: "https://images.unsplash.com/photo-1626844131082-256783844137?w=200" }
+        ]
+    },
+    {
+        id: "m3", name: "Pure Greens", cuisine: "Indian", budget: 300, rating: 4.0,
+        image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800",
+        vicinity: "Kaloor", facilities: ["Parking"], isVeg: true,
+        lat: 9.9500, lng: 76.2800,
+        dishes: [{ name: "Veg Thali", price: 150, img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200" }]
+    },
+    {
+        id: "m4", name: "Tokyo Sushi", cuisine: "Japanese", budget: 2000, rating: 4.8,
+        image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800",
+        vicinity: "Edappally", facilities: ["AC", "Parking", "Wi-Fi"], isVeg: false,
+        lat: 9.9600, lng: 76.2900,
+        dishes: [{ name: "Sashimi Platter", price: 900, img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=200" }]
+    },
+    {
+        id: "m5", name: "Dragon Wok", cuisine: "Chinese", budget: 500, rating: 4.1,
+        image: "https://images.unsplash.com/photo-1525164286253-04e68b9d94c6?w=800",
+        vicinity: "Vyttila", facilities: ["AC"], isVeg: false,
+        lat: 9.9700, lng: 76.3000,
+        dishes: [{ name: "Kung Pao", price: 320, img: "https://images.unsplash.com/photo-1525164286253-04e68b9d94c6?w=200" }]
+    },
+    {
+        id: "m6", name: "Cafe Mocha", cuisine: "Cafe", budget: 400, rating: 4.4,
+        image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800",
+        vicinity: "Panampilly Nagar", facilities: ["Wi-Fi", "AC"], isVeg: false,
+        lat: 9.9200, lng: 76.2800,
+        dishes: [{ name: "Latte Art", price: 200, img: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=200" }]
+    },
+    {
+        id: "m7", name: "Taco Bell", cuisine: "Mexican", budget: 350, rating: 3.9,
+        image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800",
+        vicinity: "Lulu Mall", facilities: ["Parking"], isVeg: false,
+        lat: 9.9800, lng: 76.3100,
+        dishes: [{ name: "Tacos", price: 100, img: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=200" }]
+    },
+    {
+        id: "m8", name: "Burger King", cuisine: "American", budget: 450, rating: 4.0,
+        image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800",
+        vicinity: "MG Road", facilities: ["AC"], isVeg: false,
+        lat: 9.9350, lng: 76.2750,
+        dishes: [{ name: "Whopper", price: 250, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200" }]
     }
-};
-window.showResults = () => {
-    document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
-    document.getElementById('results-page').classList.add('active');
-    calculateResults();
-};
-// --- Step Logic ---
+];
+const appState = { step: 1, preferences: { budget: 500, cuisine: null, diet: 'Any', amenities: [] }, userLocation: null };
 function initBudgetSlider() {
     const slider = document.getElementById('budget-range');
     const display = document.getElementById('budget-display');
+    if (!slider) return;
+    slider.min = 100; slider.max = 3000; slider.value = 500;
     slider.addEventListener('input', (e) => {
-        appState.preferences.budget = parseInt(e.target.value);
-        display.textContent = `₹${e.target.value}`;
+        let val = parseInt(e.target.value);
+        appState.preferences.budget = val;
+        display.textContent = val >= 3000 ? "₹3000+" : `₹${val}`;
     });
 }
 function renderCuisineOptions() {
+    const grid = document.getElementById('cuisine-grid');
+    if (!grid) return;
     const cuisines = [
-        { name: 'Indian', icon: 'fa-pepper-hot' },
-        { name: 'Chinese', icon: 'fa-utensils' },
-        { name: 'Italian', icon: 'fa-pizza-slice' },
-        { name: 'Mexican', icon: 'fa-hat-cowboy' },
-        { name: 'American', icon: 'fa-hamburger' },
-        { name: 'Japanese', icon: 'fa-fish' },
+        { name: 'Indian', icon: 'fa-pepper-hot' }, { name: 'Chinese', icon: 'fa-utensils' },
+        { name: 'Italian', icon: 'fa-pizza-slice' }, { name: 'Mexican', icon: 'fa-hat-cowboy' },
+        { name: 'American', icon: 'fa-hamburger' }, { name: 'Japanese', icon: 'fa-fish' },
         { name: 'Cafe', icon: 'fa-coffee' }
     ];
-    const grid = document.getElementById('cuisine-grid');
     grid.innerHTML = '';
     cuisines.forEach(c => {
         const div = document.createElement('div');
         div.className = 'selection-card';
         div.innerHTML = `<i class="fas ${c.icon}"></i><h3>${c.name}</h3>`;
         div.onclick = () => {
-            grid.querySelectorAll('.selection-card').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('#step-2 .selection-card').forEach(el => el.classList.remove('selected'));
             div.classList.add('selected');
             appState.preferences.cuisine = c.name;
         };
-        div.onmouseenter = () => document.body.classList.add('hover-magnet');
-        div.onmouseleave = () => document.body.classList.remove('hover-magnet');
         grid.appendChild(div);
     });
 }
-window.selectDiet = (type, el) => {
-    document.querySelectorAll('#step-3 .selection-card').forEach(card => card.classList.remove('selected'));
-    el.classList.add('selected');
-    appState.preferences.diet = type;
+window.nextStep = (target) => {
+    if (target === 3 && !appState.preferences.cuisine) { alert("Please pick a cuisine!"); return; }
+    document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
+    document.getElementById(`step-${target}`).classList.add('active');
+    appState.step = target;
 };
-window.selectService = (mode, el) => {
-    document.querySelectorAll('#step-4 .selection-card').forEach(card => card.classList.remove('selected'));
+window.selectDiet = (val, el) => {
+    document.querySelectorAll('#step-3 .selection-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
-    appState.preferences.diningMode = mode;
+    appState.preferences.diet = val;
 };
-window.updateAmenityRating = (val) => {
-    appState.preferences.minRating = parseFloat(val);
-    document.getElementById('amenity-rating-val').textContent = val;
+window.selectService = (val, el) => {
+    document.querySelectorAll('#step-4 .selection-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
 };
 window.toggleFilterFacility = (fac) => {
     const idx = appState.preferences.amenities.indexOf(fac);
     if (idx > -1) appState.preferences.amenities.splice(idx, 1);
     else appState.preferences.amenities.push(fac);
 };
-// --- Result Calculation (API Integration) ---
-function calculateResults() {
-    // Show Loading State
+window.showResults = () => {
+    document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
+    document.getElementById('results-page').classList.add('active');
     const container = document.getElementById('results-container');
-    container.innerHTML = '<div style="grid-column:1/-1; text-align:center;"><i class="fas fa-spinner fa-spin" style="font-size:3rem; color:var(--primary);"></i><p style="margin-top:1rem;">Finding best spots...</p></div>';
-    // Get Location
-    if (!navigator.geolocation) {
-        alert("Geolocation is not supported by your browser.");
-        return;
-    }
-    navigator.geolocation.getCurrentPosition((position) => {
-        const payload = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            budget: appState.preferences.budget,
-            cuisine: appState.preferences.cuisine,
-            amenities: appState.preferences.amenities
-        };
-        // Call Backend
-        fetch('http://localhost:3000/api/recommend', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-            .then(res => res.json())
-            .then(data => {
-                appState.restaurants = data; // Store results
-                renderResults(data);
-            })
-            .catch(err => {
-                console.error(err);
-                container.innerHTML = '<p style="text-align:center; color:red;">Failed to fetch recommendations. Is server running?</p>';
-            });
-    }, (error) => {
-        alert("Unable to retrieve your location.");
-        container.innerHTML = '<p style="text-align:center;">Location access denied.</p>';
+    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem;"><i class="fas fa-search-location fa-spin" style="font-size:3rem; color:var(--primary);"></i><h3>Locating...</h3></div>`;
+    if (!navigator.geolocation) { setTimeout(() => processMockResults(9.9312, 76.2673), 1000); return; }
+    navigator.geolocation.getCurrentPosition(
+        (pos) => processMockResults(pos.coords.latitude, pos.coords.longitude),
+        (err) => { alert("Using default location."); processMockResults(9.9312, 76.2673); },
+        { enableHighAccuracy: true, timeout: 5000 }
+    );
+};
+window.hideResults = () => {
+    document.getElementById('results-page').classList.remove('active');
+    document.getElementById('step-5').classList.add('active');
+};
+function processMockResults(userLat, userLng) {
+    const filters = appState.preferences;
+    let results = mockRestaurants.map(r => {
+        const dist = getDistanceFromLatLonInKm(userLat, userLng, r.lat, r.lng);
+        return { ...r, distance: dist.toFixed(1) };
     });
+    results = results.filter(r => {
+        if (filters.cuisine && r.cuisine !== filters.cuisine) return false;
+        if (Math.abs(r.budget - filters.budget) > 2000) return false;
+        return true;
+    });
+    if (results.length === 0) {
+        alert("No exact matches found. Showing all nearby options!");
+        results = mockRestaurants.map(r => {
+            const dist = getDistanceFromLatLonInKm(userLat, userLng, r.lat, r.lng);
+            return { ...r, distance: dist.toFixed(1) };
+        });
+    }
+    results.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+    renderList(results);
 }
-function renderResults(list) {
+function renderList(list) {
     const container = document.getElementById('results-container');
     container.innerHTML = '';
-    if (list.length === 0) {
-        container.innerHTML = `
-            <div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-muted);">
-                <i class="fas fa-search" style="font-size:3rem; margin-bottom:1rem; opacity:0.5;"></i>
-                <h3>No perfect match found nearby.</h3>
-                <p>Try adjusting your filters or ensure restaurants are registered in the Partner Portal.</p>
-            </div>
-        `;
-        return;
-    }
     list.forEach(r => {
-        // Map Google/DB data to card
-        // Image: Use Google Photo or Fallback
-        let thumb = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500";
-        if (r.photos && r.photos.length > 0) {
-            // Note: Needs API Key for photo reference, simplified for now or rely on fallback
-            // thumb = ... (complex URL construction)
-        }
         const div = document.createElement('div');
         div.className = 'restaurant-card';
-        // Handle facilities array safely
-        const tags = r.facilities || [];
         div.innerHTML = `
             <div class="card-image-wrap">
-                <img src="${thumb}" alt="${r.name}">
-                <span class="card-rating">${r.rating || 'N/A'} ★</span>
+                <img src="${r.image}" alt="${r.name}">
+                <span class="card-rating">${r.rating} ★</span>
             </div>
             <div class="card-content">
                 <h3 class="card-title">${r.name}</h3>
                 <div class="card-meta">
-                    <span>${r.cuisine || 'Restaurant'} • ${r.budget || 'Medium'}</span>
-                    <span>${r.isVeg ? '<span style="color:var(--success)">Pure Veg</span>' : 'Veg/Non-Veg'}</span>
+                    <span>${r.cuisine} • ₹${r.budget} for two</span>
+                    <span style="color:var(--primary); font-weight:bold;">${r.distance} km</span>
                 </div>
-                <div class="tag-row">
-                    ${tags.slice(0, 3).map(f => `<span class="tag">${f}</span>`).join('')}
-                </div>
-                <button class="view-btn" onclick="openDetails('${r.place_id}')">View Details</button>
+                <div class="tag-row">${r.facilities.map(f => `<span class="tag">${f}</span>`).join('')}</div>
+                <button class="view-btn" onclick="openDetails('${r.id}')">View Details</button>
             </div>
         `;
-        div.onmouseenter = () => document.body.classList.add('hover-magnet');
-        div.onmouseleave = () => document.body.classList.remove('hover-magnet');
         container.appendChild(div);
     });
 }
-// --- Detailed View Logic ---
-// --- Detailed View Logic ---
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    var R = 6371; var dLat = deg2rad(lat2 - lat1); var dLon = deg2rad(lon2 - lon1);
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); return R * c;
+}
+function deg2rad(deg) { return deg * (Math.PI / 180); }
 window.openDetails = (id) => {
-    // id is now a string (Google Place ID)
-    // Find in appState or use Id directly
-    const r = appState.restaurants.find(item => item.place_id === id);
+    const r = mockRestaurants.find(item => item.id === id);
     if (!r) return;
-    // Generate pseudo-random index from string ID logic to prevent crash
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-        hash = id.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const safeIndex = Math.abs(hash);
-    // Generate random data for demo
-    const chef = chefNames[safeIndex % chefNames.length];
-    const randReviews = [reviewTexts[safeIndex % reviewTexts.length], reviewTexts[(safeIndex + 1) % reviewTexts.length]];
-    const famous = [famousDishes[safeIndex % famousDishes.length], famousDishes[(safeIndex + 1) % famousDishes.length]];
-    const modalBody = document.getElementById('details-body');
-    const facilities = r.facilities || [];
-    // Coordinates might be geometry.location or enriched coords
-    const lat = r.geometry ? r.geometry.location.lat : 0;
-    const lng = r.geometry ? r.geometry.location.lng : 0;
-    modalBody.innerHTML = `
-        <div class="details-hero">
-            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800" alt="${r.name}">
-            <div class="details-overlay">
-                <h1 style="font-size:2.5rem; font-family:var(--font-heading);">${r.name}</h1>
-                <p style="opacity:0.9; margin-bottom:0.5rem;">${r.cuisine || 'Restaurant'} | ${r.budget || 'Medium'} | ${lat.toFixed(4)}, ${lng.toFixed(4)}</p>
-                <div class="tag-row">
-                    ${facilities.map(f => `<span class="tag" style="background:rgba(255,255,255,0.2); color:white;">${f}</span>`).join('')}
-                </div>
+    const reviews = [
+        "Amazing food! The flavors were authentic.",
+        "Great ambiance but slightly slow service.",
+        "Loved it! Will definitely come back."
+    ];
+    document.getElementById('details-body').innerHTML = `
+        <img src="${r.image}" class="details-hero-img">
+        <div class="details-overlay-info">
+            <div>
+                <h1 style="font-family:var(--font-heading); line-height:1;">${r.name}</h1>
+                <p style="color:var(--text-muted);">${r.vicinity} | ${r.cuisine} | ₹${r.budget}</p>
             </div>
+            <div style="font-size:1.5rem; font-weight:bold; color:var(--primary);">${r.rating} ★</div>
         </div>
-        
-        <div class="details-header">
-            <div style="display:flex; gap:1rem; margin-bottom:1.5rem;">
-                <button class="btn-primary-glow" style="padding:0.8rem 2rem; border-radius:12px; border:none; color:white; font-weight:600; cursor:pointer;">Book a Table</button>
-                <button style="padding:0.8rem 2rem; border-radius:12px; border:2px solid var(--border); background:transparent; font-weight:600; cursor:pointer; color:var(--text-main);" onclick="alert('Navigating...')">Navigate</button>
-            </div>
+        <div class="action-row">
+            <button class="action-btn btn-book" onclick="alert('Table Booked!')">Book a Table</button>
+            <button class="action-btn btn-nav" onclick="alert('Opening Google Maps...')">Navigate</button>
         </div>
-        <div class="details-grid">
+        <div class="details-split">
             <div class="left-col">
                 <h3 style="margin-bottom:1rem;">Famous Dishes</h3>
-                <p style="margin-bottom:2rem; color:var(--text-muted);">${famous.join(', ')}, and more.</p>
-                <h3 style="margin-bottom:1rem;">Menu Highlights</h3>
-                <div class="menu-grid">
-                    ${menuItems.map(m => `
-                        <div class="menu-item">
-                            <img src="${m.img}" class="menu-img">
-                            <p class="menu-name">${m.name}</p>
-                            <span class="menu-price">${m.price}</span>
+                <div class="dish-grid">
+                    ${r.dishes.map(d => `
+                        <div class="dish-item">
+                            <img src="${d.img}" class="dish-img">
+                            <div style="font-size:0.9rem; font-weight:600;">${d.name}</div>
+                            <div style="font-size:0.8rem; color:var(--primary);">₹${d.price}</div>
                         </div>
                     `).join('')}
                 </div>
-                
-                <h3 style="margin-top:2rem; margin-bottom:1rem;">About the Chef</h3>
-                <div class="chef-section">
-                    <img src="https://i.pravatar.cc/150?u=${safeIndex}" class="chef-avatar" alt="Chef">
+                <h3 style="margin-bottom:1rem;">Meet the Chef</h3>
+                <div class="chef-card">
+                    <img src="https://i.pravatar.cc/150?u=${r.id}" class="chef-img">
                     <div>
-                        <h4 style="margin:0;">Chef ${chef}</h4>
-                        <p style="font-size:0.9rem; color:var(--text-muted);">Executive Chef • 12 Years Exp</p>
+                        <h4 style="margin:0;">Chef Antonio</h4>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Executive Chef • 15 Years Exp</p>
                     </div>
                 </div>
             </div>
             <div class="right-col">
-                <h3 style="margin-bottom:1rem;">Guest Reviews</h3>
-                <div class="reviews-scroll">
-                    ${randReviews.map(txt => `
-                        <div class="review-item">
-                            <div class="review-header">
-                                <span>Guest ${(Math.random() * 1000).toFixed(0)}</span>
-                                <span style="color:#fbbf24;">★★★★★</span>
-                            </div>
-                            <p class="review-text">"${txt}"</p>
+                <h3 style="margin-bottom:1rem;">Customer Reviews</h3>
+                ${reviews.map(txt => `
+                    <div class="review-item">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                            <strong>User ${Math.floor(Math.random() * 100)}</strong>
+                            <span style="color:#fbbf24;">★★★★★</span>
                         </div>
-                    `).join('')}
-                </div>
+                        <p style="font-size:0.9rem; color:var(--text-muted);">"${txt}"</p>
+                    </div>
+                `).join('')}
             </div>
         </div>
     `;
@@ -355,27 +302,3 @@ window.openDetails = (id) => {
 window.closeDetails = () => {
     document.getElementById('details-modal').style.display = 'none';
 };
-// --- Theme ---
-function initTheme() {
-    const saved = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', saved);
-    updateThemeIcon(saved);
-    document.getElementById('theme-toggle').onclick = toggleTheme;
-}
-function toggleTheme() {
-    const cur = document.documentElement.getAttribute('data-theme');
-    const next = cur === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
-    updateThemeIcon(next);
-}
-function updateThemeIcon(t) {
-    const icon = document.querySelector('#theme-toggle i');
-    icon.className = t === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    icon.style.color = t === 'dark' ? '#FBBF24' : '#1F2933';
-}
-// --- Data (Inlined) ---
-function loadRestaurants() {
-    // Replaced by API
-    appState.restaurants = [];
-}

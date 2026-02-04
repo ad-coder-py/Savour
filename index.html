@@ -1,6 +1,3 @@
-index.html
-
-
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 
@@ -16,98 +13,73 @@ index.html
 </head>
 
 <body class="hover-magnet">
-    <!-- Subtle Food Pattern Background -->
     <div class="bg-pattern"></div>
-    <!-- Floating Background Elements (User Configured) -->
     <i class="fas fa-pizza-slice floating-bg bg-1"></i>
     <i class="fas fa-hamburger floating-bg bg-2"></i>
     <i class="fas fa-leaf floating-bg bg-3"></i>
     <i class="fas fa-coffee floating-bg bg-4"></i>
-    <!-- Custom Cursor -->
     <div class="cursor-dot"></div>
     <div class="cursor-outline"></div>
     <header>
         <div class="nav-container">
             <a href="#" class="logo" onclick="location.reload()">
-                SA
-                <div class="v-logo-container" aria-label="V">
-                    <svg viewBox="0 0 100 100" class="v-svg">
+                SA<div class="v-logo-container"><svg viewBox="0 0 100 100" class="v-svg">
                         <defs>
-                            <!-- Perfect Upright Fork -->
                             <path id="fork-shape"
                                 d="M -6 0 L -6 25 Q -6 35 0 35 Q 6 35 6 25 L 6 0 M -2 0 L -2 20 M 2 0 L 2 20 M 0 35 L 0 80"
                                 fill="none" class="v-fork" stroke-linecap="round" stroke-linejoin="round" />
-                            <!-- Perfect Upright Knife -->
                             <path id="knife-shape" d="M 0 0 L 0 80 Q 0 80 0 80 M 0 0 Q 12 5 12 30 L 12 80 L 0 80"
                                 fill="currentColor" class="v-knife" />
                         </defs>
-                        <!-- Left Side: Fork (Rotated) -->
                         <g transform="translate(32, 50) rotate(-25)">
                             <path
                                 d="M-5 -35 L-5 -10 Q-5 0 0 0 Q5 0 5 -10 L5 -35 M-2 -35 L-2 -10 M2 -35 L2 -10 M0 0 L0 35"
                                 class="v-fork" fill="none" stroke-width="4" />
                         </g>
-                        <!-- Right Side: Knife (Rotated) -->
                         <g transform="translate(68, 50) rotate(25)">
                             <path d="M-6 -35 L-6 35 L6 35 L6 0 C6 -20 0 -35 -6 -35 Z" class="v-knife" />
                         </g>
-                        <!-- Vertex Dot -->
                         <circle cx="50" cy="88" r="6" class="v-dot" />
-                    </svg>
-                </div>
-                OUR
+                    </svg></div>OUR
             </a>
             <div class="nav-controls">
-                <button id="theme-toggle" class="btn-icon" aria-label="Toggle Theme">
-                    <i class="fas fa-moon"></i>
-                </button>
+                <button id="theme-toggle" class="btn-icon"><i class="fas fa-moon"></i></button>
+                <a href="admin.html" class="btn-ghost"
+                    style="text-decoration:none; margin-right:0.5rem; font-weight:600; color:var(--text-main); font-size:0.9rem;">Admin</a>
                 <a href="owner.html" class="btn-ghost"
-                    style="text-decoration:none; margin-right:1rem; font-weight:600; color:var(--text-main);">Partner
-                    Login</a>
-                <button id="login-btn" class="btn-login">User Login</button>
+                    style="text-decoration:none; margin-right:0.5rem; font-weight:600; color:var(--text-main); font-size:0.9rem;">Partner</a>
+                <button id="login-btn" class="btn-login">Login</button>
             </div>
         </div>
     </header>
     <div class="container">
-        <!-- Step 1: Budget (Prominent First View) -->
         <section id="step-1" class="step-section active centered-step">
             <h2>Let's start with your Budget</h2>
             <p class="step-description">Approximate cost for two.</p>
             <div class="input-wrapper large-slider">
                 <span id="budget-display" class="range-display">₹500</span>
-                <input type="range" id="budget-range" min="200" max="3000" step="100" value="500">
-                <div class="slider-labels">
-                    <span>₹200</span>
-                    <span>₹3000+</span>
-                </div>
+                <input type="range" id="budget-range" min="100" max="3000" step="100" value="500">
+                <div class="slider-labels"><span>₹100</span><span>₹3000+</span></div>
             </div>
             <div class="step-nav center">
                 <button class="btn-big" onclick="nextStep(2)">Cuisines <i class="fas fa-arrow-right"></i></button>
             </div>
         </section>
-        <!-- Step 2: Cuisine -->
         <section id="step-2" class="step-section">
             <h2>Pick a Cuisine</h2>
-            <p class="step-description">What region are you exploring today?</p>
-            <div class="cards-grid" id="cuisine-grid">
-                <!-- Injected via JS -->
-            </div>
+            <div class="cards-grid" id="cuisine-grid"></div>
             <div class="step-nav">
                 <button class="btn-big btn-back" onclick="nextStep(1)"><i class="fas fa-arrow-left"></i></button>
                 <button class="btn-big" onclick="nextStep(3)">Dietary <i class="fas fa-arrow-right"></i></button>
             </div>
         </section>
-        <!-- Step 3: Dietary Preference -->
         <section id="step-3" class="step-section centered-step">
             <h2>Dietary Preferences</h2>
-            <p class="step-description">Any restrictions?</p>
             <div class="cards-grid tight-grid">
-                <div class="selection-card" onclick="selectDiet('Veg', this)">
-                    <i class="fas fa-leaf"></i>
+                <div class="selection-card" onclick="selectDiet('Veg', this)"><i class="fas fa-leaf"></i>
                     <h3>Pure Veg</h3>
                 </div>
-                <div class="selection-card selected" onclick="selectDiet('Any', this)">
-                    <i class="fas fa-utensils"></i>
+                <div class="selection-card selected" onclick="selectDiet('Any', this)"><i class="fas fa-utensils"></i>
                     <h3>No Preference</h3>
                 </div>
             </div>
@@ -116,17 +88,15 @@ index.html
                 <button class="btn-big" onclick="nextStep(4)">Dining <i class="fas fa-arrow-right"></i></button>
             </div>
         </section>
-        <!-- Step 4: Dining Option -->
         <section id="step-4" class="step-section centered-step">
-            <h2>How will you eat?</h2>
-            <p class="step-description">Select your service mode.</p>
+            <h2>Service Mode</h2>
             <div class="cards-grid tight-grid">
-                <div class="selection-card selected" onclick="selectService('Dine-in', this)">
-                    <i class="fas fa-chair"></i>
+                <div class="selection-card selected" onclick="selectService('Dine-in', this)"><i
+                        class="fas fa-chair"></i>
                     <h3>Dine-in</h3>
                 </div>
-                <div class="selection-card" onclick="selectService('Takeaway', this)">
-                    <i class="fas fa-shopping-bag"></i>
+                <div class="selection-card" onclick="selectService('Takeaway', this)"><i
+                        class="fas fa-shopping-bag"></i>
                     <h3>Takeaway</h3>
                 </div>
             </div>
@@ -135,37 +105,29 @@ index.html
                 <button class="btn-big" onclick="nextStep(5)">Amenities <i class="fas fa-arrow-right"></i></button>
             </div>
         </section>
-        <!-- Step 5: Amenities & Filters -->
         <section id="step-5" class="step-section centered-step">
             <h2>Final Touches</h2>
-            <p class="step-description">Refine your search.</p>
             <div class="amenities-wrapper">
                 <div class="filter-group">
                     <h4>Minimum Rating</h4>
                     <div class="rating-input">
                         <input type="range" class="star-slider" min="3" max="5" step="0.5" value="4.0"
-                            oninput="updateAmenityRating(this.value)">
+                            oninput="document.getElementById('amenity-rating-val').textContent = this.value">
                         <div class="rating-value"><span id="amenity-rating-val">4.0</span> ★</div>
                     </div>
                 </div>
-                <div class="filter-group facilities-group">
+                <div class="filter-group">
                     <h4>Essentials</h4>
                     <div class="checkbox-grid">
-                        <label class="custom-checkbox">
-                            <input type="checkbox" value="AC" onchange="toggleFilterFacility('AC')">
-                            <span class="checkmark"><i class="fas fa-snowflake"></i></span>
-                            <span class="label-text">AC</span>
-                        </label>
-                        <label class="custom-checkbox">
-                            <input type="checkbox" value="Parking" onchange="toggleFilterFacility('Parking')">
-                            <span class="checkmark"><i class="fas fa-car"></i></span>
-                            <span class="label-text">Parking</span>
-                        </label>
-                        <label class="custom-checkbox">
-                            <input type="checkbox" value="Wi-Fi" onchange="toggleFilterFacility('Wi-Fi')">
-                            <span class="checkmark"><i class="fas fa-wifi"></i></span>
-                            <span class="label-text">Wi-Fi</span>
-                        </label>
+                        <label class="custom-checkbox"><input type="checkbox" value="AC"
+                                onchange="toggleFilterFacility('AC')"><span class="checkmark"><i
+                                    class="fas fa-snowflake"></i></span><span class="label-text">AC</span></label>
+                        <label class="custom-checkbox"><input type="checkbox" value="Parking"
+                                onchange="toggleFilterFacility('Parking')"><span class="checkmark"><i
+                                    class="fas fa-car"></i></span><span class="label-text">Parking</span></label>
+                        <label class="custom-checkbox"><input type="checkbox" value="Wi-Fi"
+                                onchange="toggleFilterFacility('Wi-Fi')"><span class="checkmark"><i
+                                    class="fas fa-wifi"></i></span><span class="label-text">Wi-Fi</span></label>
                     </div>
                 </div>
             </div>
@@ -175,37 +137,35 @@ index.html
                         class="fas fa-search"></i></button>
             </div>
         </section>
-        <!-- Results Page -->
         <section id="results-page" class="step-section">
-            <h2 class="results-header">Your Curated Spots</h2>
-            <div class="results-grid" id="results-container">
-                <!-- Results injected here -->
+            <div style="display: flex; align-items: center; margin-bottom: 2rem;">
+                <button class="btn-icon" style="margin-right: 1rem; font-size: 1.5rem;" onclick="hideResults()"><i
+                        class="fas fa-arrow-left"></i></button>
+                <h2 class="results-header" style="margin: 0;">Your Curated Spots</h2>
             </div>
+            <div class="results-grid" id="results-container"></div>
             <div class="step-nav center" style="margin-top: 3rem;">
                 <button class="btn-big btn-back" onclick="location.reload()">Start Over <i
                         class="fas fa-redo"></i></button>
             </div>
         </section>
     </div>
-    <!-- Login Modal -->
     <div id="login-modal" class="modal">
         <div class="modal-content login-content">
             <button class="close-modal">&times;</button>
-            <h2>Welcome Back</h2>
+            <h2>User Login</h2>
             <form>
                 <input type="email" placeholder="Email Address">
                 <input type="password" placeholder="Password">
-                <button type="submit" class="btn-big full-width">Sign In</button>
+                <button type="button" class="btn-big btn-primary-glow" style="width:100%;"
+                    onclick="alert('User Login Success!')">Sign In</button>
             </form>
         </div>
     </div>
-    <!-- Restaurant Details Modal -->
     <div id="details-modal" class="modal">
-        <div class="modal-content details-content">
+        <div class="modal-content" style="padding: 0;">
             <button class="close-modal" onclick="closeDetails()">&times;</button>
-            <div id="details-body">
-                <!-- Dynamic Content -->
-            </div>
+            <div id="details-body"></div>
         </div>
     </div>
     <script src="script.js"></script>
