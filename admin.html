@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAVOUR - Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .admin-sidebar {
+            width: 250px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: fixed;
+            padding: 2rem;
+        }
+
+        .admin-main {
+            margin-left: 250px;
+            padding: 3rem;
+        }
+
+        .approve-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-chip {
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-sidebar">
+        <h2 style="font-family: var(--font-heading);">Admin Console</h2>
+        <nav style="margin-top: 2rem;">
+            <a href="#" class="btn-ghost" style="display: block; margin-bottom: 1rem;">Approvals</a>
+            <a href="index.html" class="btn-ghost" style="display: block;">Back to Home</a>
+        </nav>
+    </div>
+    <main class="admin-main">
+        <h1>Pending Approvals</h1>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Review and approve partner restaurant listings.</p>
+
+        <div id="pending-list">
+            <p>Loading pending requests...</p>
+        </div>
+    </main>
+
+    <script>
+        async function loadPending() {
+            const res = await fetch('http://localhost:3000/api/admin/list_pending', { method: 'POST' });
+            const data = await res.json();
+            const list = document.getElementById('pending-list');
+
+            if (data.length === 0) {
+                list.innerHTML = '<h3>Everything is up to date!</h3>';
+                return;
+            }
+
+            list.innerHTML = '';
+            data.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'approve-card';
+                div.innerHTML = `
+                    <div>
+                        <h3>${r.name}</h3>
+                        <p>${r.cuisine} | Budget: ${r.budget} | Owner: ${r.ownerEmail}</p>
+                        <span class="status-chip status-pending">Pending Approval</span>
+                    </div>
+                    <div>
+                        <button class="btn-big" style="background: var(--primary); color: white;" onclick="approve(${r.id})">Approve</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function approve(id) {
+            const res = await fetch('http://localhost:3000/api/admin/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ restaurantId: id })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("Restaurant Approved!");
+                loadPending();
+            }
+        }
+
+        loadPending();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,36 @@
+{
+  "users": [
+    {
+      "email": "user@example.com",
+      "password": "password",
+      "role": "user",
+      "name": "Alex"
+    },
+    {
+      "email": "admin@savour.com",
+      "password": "admin",
+      "role": "admin",
+      "name": "Head Chef"
+    },
+    {
+      "email": "partner@spicevilla.com",
+      "password": "partner",
+      "role": "partner",
+      "name": "Spice Villa Owner",
+      "restaurantId": 1
+    },
+    {
+      "email": "adr23cs010@cea.ac.in",
+      "password": "adr123",
+      "name": "test_adarsh",
+      "role": "user"
+    },
+    {
+      "email": "annankada@gmail.com",
+      "password": "annan123",
+      "name": "Annan",
+      "role": "partner",
+      "restaurantId": 1772734683
+    }
+  ]
+}

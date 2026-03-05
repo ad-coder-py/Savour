@@ -20,7 +20,29 @@
       "Spicy",
       "Curry",
       "Family"
-    ]
+    ],
+    "dishes": [
+      {
+        "name": "Butter Chicken",
+        "price": 450,
+        "img": "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=200"
+      },
+      {
+        "name": "Garlic Naan",
+        "price": 60,
+        "img": "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?w=200"
+      },
+      {
+        "name": "Paneer Tikka",
+        "price": 320,
+        "img": "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=200"
+      }
+    ],
+    "chef": {
+      "name": "Chef Kapoor",
+      "exp": 15,
+      "img": "https://images.unsplash.com/photo-1583394293214-28dead15654e?w=200"
+    }
   },
   {
     "id": 2,
@@ -34,8 +56,8 @@
     ],
     "image": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
     "coords": {
-      "lat": 12.9780,
-      "lng": 77.6000
+      "lat": 12.978,
+      "lng": 77.6
     },
     "isVeg": false,
     "tags": [
@@ -57,8 +79,8 @@
     ],
     "image": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
     "coords": {
-      "lat": 12.9600,
-      "lng": 77.5800
+      "lat": 12.96,
+      "lng": 77.58
     },
     "isVeg": false,
     "tags": [
@@ -79,8 +101,8 @@
     ],
     "image": "https://images.unsplash.com/photo-1481931098730-318b6f776db0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
     "coords": {
-      "lat": 12.9850,
-      "lng": 77.5900
+      "lat": 12.985,
+      "lng": 77.59
     },
     "isVeg": true,
     "tags": [
@@ -100,8 +122,8 @@
     ],
     "image": "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
     "coords": {
-      "lat": 12.9700,
-      "lng": 77.6100
+      "lat": 12.97,
+      "lng": 77.61
     },
     "isVeg": false,
     "tags": [
@@ -123,8 +145,8 @@
     ],
     "image": "https://images.unsplash.com/photo-1525164286253-04e68b9d94c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
     "coords": {
-      "lat": 12.9550,
-      "lng": 77.5950
+      "lat": 12.955,
+      "lng": 77.595
     },
     "isVeg": false,
     "tags": [
@@ -146,8 +168,8 @@
     ],
     "image": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
     "coords": {
-      "lat": 12.9650,
-      "lng": 77.5850
+      "lat": 12.965,
+      "lng": 77.585
     },
     "isVeg": true,
     "tags": [
@@ -170,8 +192,8 @@
     ],
     "image": "https://images.unsplash.com/photo-1585937421612-70a008356f36?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
     "coords": {
-      "lat": 12.9900,
-      "lng": 77.6200
+      "lat": 12.99,
+      "lng": 77.62
     },
     "isVeg": false,
     "tags": [
@@ -192,8 +214,8 @@
     ],
     "image": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
     "coords": {
-      "lat": 12.9750,
-      "lng": 77.5900
+      "lat": 12.975,
+      "lng": 77.59
     },
     "isVeg": true,
     "tags": [
@@ -215,14 +237,33 @@
     ],
     "image": "https://images.unsplash.com/photo-1544148103-0773bf10d330?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
     "coords": {
-      "lat": 12.9600,
-      "lng": 77.6050
+      "lat": 12.96,
+      "lng": 77.605
     },
     "isVeg": false,
     "tags": [
       "Hummus",
       "Falafel",
       "View"
+    ]
+  },
+  {
+    "ownerEmail": "annankada@gmail.com",
+    "name": "Annan Kada",
+    "cuisine": "Indian",
+    "budget": "100",
+    "chef": {
+      "name": "Expert Chef",
+      "exp": "5"
+    },
+    "id": 1772734683,
+    "status": "approved",
+    "dishes": [
+      {
+        "name": "vada",
+        "price": 150,
+        "img": ""
+      }
     ]
   }
 ]
