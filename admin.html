@@ -45,6 +45,43 @@
             background: #fef3c7;
             color: #92400e;
         }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            width: 90%;
+            max-width: 500px;
+            padding: 2.5rem;
+            border-radius: 24px;
+            position: relative;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border);
+        }
+
+        .modal-content h2 { margin-bottom: 1.5rem; }
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--background);
+            color: var(--text-main);
+        }
+        .modal-actions { display: flex; gap: 1rem; margin-top: 1rem; }
     </style>
 </head>
 
@@ -65,45 +102,144 @@
         </div>
     </main>
 
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="font-family: var(--font-heading);">Edit Details</h2>
+            <input type="hidden" id="edit-id">
+            <label>Restaurant Name</label>
+            <input type="text" id="edit-name">
+            <label>Cuisine</label>
+            <input type="text" id="edit-cuisine">
+            <label>Budget</label>
+            <select id="edit-budget">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+            </select>
+            <label>Dietary</label>
+            <select id="edit-dietary">
+                <option value="Both">Both</option>
+                <option value="Veg">Vegetarian Only</option>
+                <option value="Non-Veg">Non-Vegetarian Only</option>
+            </select>
+            <label>Service Mode</label>
+            <select id="edit-service">
+                <option value="Dine-in">Dine-in</option>
+                <option value="Delivery">Delivery</option>
+                <option value="Takeaway">Takeaway</option>
+                <option value="All">All Modes</option>
+            </select>
+            <label>Essentials</label>
+            <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="AC"> AC</label>
+                <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="Wi-Fi"> Wi-Fi</label>
+                <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="Parking"> Parking</label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-big" style="flex:1;" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-big" style="flex:1; background: var(--primary); color: white;" onclick="saveEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let pendingRestaurants = [];
+
         async function loadPending() {
-            const res = await fetch('http://localhost:3000/api/admin/list_pending', { method: 'POST' });
-            const data = await res.json();
-            const list = document.getElementById('pending-list');
+            try {
+                const res = await fetch('http://localhost:3000/api/admin/list_pending', { method: 'POST' });
+                if (!res.ok) throw new Error("Server error: " + res.status);
+                const data = await res.json();
+                pendingRestaurants = data;
+                const list = document.getElementById('pending-list');
 
-            if (data.length === 0) {
-                list.innerHTML = '<h3>Everything is up to date!</h3>';
-                return;
+                if (data.length === 0) {
+                    list.innerHTML = '<h3>Everything is up to date!</h3>';
+                    return;
+                }
+
+                list.innerHTML = '';
+                data.forEach((r, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'approve-card';
+                    const facilities = (r.facilities || []).join(', ');
+                    div.innerHTML = `
+                        <div style="flex:1;">
+                            <h3>${r.name}</h3>
+                            <p><b>Cuisine:</b> ${r.cuisine} | <b>Dietary:</b> ${r.dietary || 'Both'}</p>
+                            <p><b>Service:</b> ${r.serviceMode || 'Dine-in'} | <b>Rating:</b> ${r.rating || 4.0}</p>
+                            <p><b>Essentials:</b> ${facilities || 'None'}</p>
+                            <span class="status-chip status-pending">Pending Approval</span>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button class="btn-ghost" onclick='openEditModal(${index})'>Edit</button>
+                            <button class="btn-big" style="background: var(--primary); color: white;" onclick="approve(${r.id})">Approve</button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            } catch (err) {
+                document.getElementById('pending-list').innerHTML = `<p style="color:red;">Failed to load requests: ${err.message}</p>`;
             }
-
-            list.innerHTML = '';
-            data.forEach(r => {
-                const div = document.createElement('div');
-                div.className = 'approve-card';
-                div.innerHTML = `
-                    <div>
-                        <h3>${r.name}</h3>
-                        <p>${r.cuisine} | Budget: ${r.budget} | Owner: ${r.ownerEmail}</p>
-                        <span class="status-chip status-pending">Pending Approval</span>
-                    </div>
-                    <div>
-                        <button class="btn-big" style="background: var(--primary); color: white;" onclick="approve(${r.id})">Approve</button>
-                    </div>
-                `;
-                list.appendChild(div);
-            });
         }
 
         async function approve(id) {
-            const res = await fetch('http://localhost:3000/api/admin/approve', {
+            try {
+                const res = await fetch('http://localhost:3000/api/admin/approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ restaurantId: id })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Restaurant Approved!");
+                    loadPending();
+                } else {
+                    alert("Approval failed: " + data.message);
+                }
+            } catch (err) { alert("Network error: " + err.message); }
+        }
+
+        function openEditModal(index) {
+            const r = pendingRestaurants[index];
+            document.getElementById('edit-id').value = r.id;
+            document.getElementById('edit-name').value = r.name;
+            document.getElementById('edit-cuisine').value = r.cuisine;
+            document.getElementById('edit-budget').value = r.budget || 'Medium';
+            document.getElementById('edit-dietary').value = r.dietary || 'Both';
+            document.getElementById('edit-service').value = r.serviceMode || 'Dine-in';
+            const facilities = r.facilities || [];
+            document.querySelectorAll('.edit-essentials').forEach(cb => {
+                cb.checked = facilities.includes(cb.value);
+            });
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        async function saveEdit() {
+            const id = parseInt(document.getElementById('edit-id').value);
+            const name = document.getElementById('edit-name').value;
+            const cuisine = document.getElementById('edit-cuisine').value;
+            const budget = document.getElementById('edit-budget').value;
+            const dietary = document.getElementById('edit-dietary').value;
+            const serviceMode = document.getElementById('edit-service').value;
+            const facilities = Array.from(document.querySelectorAll('.edit-essentials:checked')).map(cb => cb.value);
+
+            const res = await fetch('http://localhost:3000/api/owner/update_menu', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ restaurantId: id })
+                body: JSON.stringify({ restaurantId: id, name, cuisine, budget, dietary, serviceMode, facilities })
             });
-            const data = await res.json();
-            if (data.success) {
-                alert("Restaurant Approved!");
+            
+            if (res.ok) {
+                alert("Changes saved!");
+                closeEditModal();
                 loadPending();
+            } else {
+                alert("Failed to save changes.");
             }
         }
 

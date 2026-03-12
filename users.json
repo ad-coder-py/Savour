@@ -31,6 +31,13 @@
       "name": "Annan",
       "role": "partner",
       "restaurantId": 1772734683
+    },
+    {
+      "email": "arabian@gmail.com",
+      "password": "arabian123",
+      "name": "Arabian",
+      "role": "partner",
+      "restaurantId": 1773281127
     }
   ]
 }

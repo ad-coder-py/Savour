@@ -4,7 +4,8 @@ let appState = {
     preferences: { budget: 500, cuisine: null, diet: 'Any', amenities: [] },
     user: JSON.parse(localStorage.getItem('user')) || null,
     userLocation: null,
-    isSignup: false
+    isSignup: false,
+    emailVerified: false
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -137,7 +138,7 @@ window.showResults = async () => {
             });
             let data = await response.json();
 
-            // 3. Client-side Sort by Distance
+            // 3. Client-side Sort by Distance (Strictly under 10km prioritized)
             data = data.map(r => ({
                 ...r,
                 distance: getDistanceFromLatLonInKm(uLat, uLng, r.lat, r.lng)
@@ -161,14 +162,14 @@ function renderList(list) {
     }
 
     list.forEach((r, idx) => {
-        const isNearest = idx === 0;
+        const isNearest = idx === 0 && r.distance < 10;
         const div = document.createElement('div');
         div.className = 'premium-card';
         div.innerHTML = `
             <div class="card-image-wrap">
                 <img src="${r.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500'}">
                 <div class="card-overlay-badge">${r.rating} ★</div>
-                ${isNearest ? '<div style="position:absolute; top:15px; left:15px; background:var(--success); color:white; padding:0.4rem 0.8rem; border-radius:30px; font-weight:700; font-size:0.8rem; z-index:10; box-shadow:0 4px 10px rgba(16,185,129,0.3);">NEAREST</div>' : ''}
+                ${isNearest ? '<div class="nearest-badge">NEAREST TO YOU</div>' : ''}
             </div>
             <div class="card-content">
                 <div class="card-title-row">
@@ -176,12 +177,12 @@ function renderList(list) {
                     <span class="dist-tag">${r.distance.toFixed(1)} km</span>
                 </div>
                 <div class="card-meta">
-                    <span>${r.cuisine} • ₹${r.budget} for two</span>
+                    <span>${r.cuisine} • Budget: ${r.budget}</span>
                 </div>
-                <div class="tag-row" style="margin-top:1rem;">
-                    ${(r.facilities || []).slice(0, 3).map(f => `<span class="tag-sm">${f}</span>`).join('')}
+                <div class="tag-row" style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    ${(r.facilities || []).slice(0, 3).map(f => `<span class="tag-sm" style="font-size:0.75rem; background:var(--background); padding:0.3rem 0.6rem; border-radius:6px; border:1px solid var(--border);">${f}</span>`).join('')}
                 </div>
-                <button class="view-btn-premium" onclick="openDetails(${r.id})">Exploure Menu & Map <i class="fas fa-chevron-right"></i></button>
+                <button class="view-btn-premium" onclick="openDetails(${r.id})">Explore Menu & Map <i class="fas fa-chevron-right"></i></button>
             </div>
         `;
         container.appendChild(div);
@@ -216,48 +217,94 @@ window.openDetails = async (id) => {
         <div class="details-hero">
             <img src="${r.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1000'}" class="details-hero-img">
             <div class="details-overlay-info">
-                <h1 style="font-size:3rem; margin-bottom:0.5rem;">${r.name}</h1>
-                <p><i class="fas fa-map-marker-alt"></i> Verified Spot • Highly Recommended</p>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
+                    <div>
+                        <h1 style="font-size:3.5rem; margin-bottom:0.5rem; font-family:var(--font-heading); line-height:1;">${r.name}</h1>
+                        <p style="font-size:1.1rem; opacity:0.9;"><i class="fas fa-map-marker-alt"></i> ${r.cuisine} • ${r.distance < 1 ? (r.distance*1000).toFixed(0) + ' m' : r.distance.toFixed(1) + ' km'} away</p>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.2); backdrop-filter:blur(10px); padding:0.8rem 1.5rem; border-radius:16px; border:1px solid rgba(255,255,255,0.3);">
+                        <div style="font-size:0.8rem; text-transform:uppercase; font-weight:700; opacity:0.8;">Avg. Rating</div>
+                        <div style="font-size:1.8rem; font-weight:800;">${r.rating} <span style="font-size:1.2rem; color:var(--secondary);">★</span></div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="details-layout">
             <div class="details-menu">
-                <h3 style="margin-bottom:1.5rem; font-family:var(--font-heading);">House Specialties</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                    <h3 style="font-family:var(--font-heading); font-size:2rem;">House Specialties</h3>
+                    <span class="tag-sm" style="background:var(--primary); color:white; border:none; padding:0.4rem 1rem;">Full Menu</span>
+                </div>
                 <div class="dish-grid-modern">
                     ${dishes.map(d => `
                         <div class="dish-card-modern">
                             <img src="${d.img || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200'}">
                             <div class="dish-details">
-                                <h4>${d.name}</h4>
-                                <span class="price">₹${d.price}</span>
-                                <button class="btn-sm" onclick="alert('Ordering feature coming soon!')">Order Now</button>
+                                <h4 style="font-size:1.2rem; margin-bottom:0.2rem;">${d.name}</h4>
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span class="price" style="font-size:1.3rem;">₹${d.price}</span>
+                                    <button class="btn-icon" style="color:var(--primary);" onclick="alert('Added to wishlist!')"><i class="far fa-heart"></i></button>
+                                </div>
                             </div>
                         </div>
                     `).join('')}
                 </div>
+                <div style="margin-top:3rem; padding:2rem; background:rgba(var(--primary-rgb), 0.03); border-radius:24px; border:2px dashed var(--border);">
+                    <h4 style="margin-bottom:0.5rem;"><i class="fas fa-info-circle"></i> Good to know</h4>
+                    <p style="color:var(--text-muted); font-size:0.95rem;">Prices are indicative and may vary. Special requests can be made during booking if available.</p>
+                </div>
             </div>
             <div class="details-map-side">
-                <h3 style="margin-bottom:1.5rem; font-family:var(--font-heading);">Live Map</h3>
-                <div id="map" style="height: 280px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 1.5rem;"></div>
-                <button class="btn-login" style="width:100%; padding:1.2rem; font-size:1.1rem;" onclick="window.open('https://www.google.com/maps/dir/?api=1&origin=${appState.userLocation.lat},${appState.userLocation.lng}&destination=${r.lat},${r.lng}')">
-                    <i class="fas fa-directions"></i> Get Precision Directions
-                </button>
+                <div class="premium-glass" style="padding:2rem; border-radius:28px; box-shadow:var(--shadow-lg); border:1px solid var(--border);">
+                    <h3 style="margin-bottom:1.5rem; font-family:var(--font-heading);">Location & Route</h3>
+                    <div id="map" style="height: 350px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 2rem; z-index:1;"></div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+                         <div style="background:var(--background); padding:1rem; border-radius:16px; text-align:center;">
+                            <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Distance</div>
+                            <div style="font-weight:700;">${r.distance.toFixed(1)} km</div>
+                         </div>
+                         <div style="background:var(--background); padding:1rem; border-radius:16px; text-align:center;">
+                            <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Est. Time</div>
+                            <div style="font-weight:700;">${Math.ceil(r.distance * 3)} mins</div>
+                         </div>
+                    </div>
+                    <button class="btn-login" style="width:100%; padding:1.2rem; font-size:1.1rem; border-radius:18px; display:flex; align-items:center; justify-content:center; gap:0.8rem;" onclick="window.open('https://www.google.com/maps/dir/?api=1&origin=${appState.userLocation.lat},${appState.userLocation.lng}&destination=${r.lat},${r.lng}')">
+                        <i class="fas fa-location-arrow"></i> Get Directions
+                    </button>
+                </div>
             </div>
         </div>
     `;
+
     document.getElementById('details-modal').style.display = 'flex';
 
     setTimeout(() => {
         if (map) map.remove();
-        map = L.map('map').setView([r.lat, r.lng], 16);
+        map = L.map('map').setView([r.lat, r.lng], 15);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; CartoDB' }).addTo(map);
 
-        // Add User Marker
-        L.circleMarker([appState.userLocation.lat, appState.userLocation.lng], { color: 'var(--primary)', radius: 8 }).addTo(map).bindPopup("You are here");
+        const uLat = appState.userLocation.lat;
+        const uLng = appState.userLocation.lng;
 
-        // Add restaurant Marker
-        const resIcon = L.divIcon({ className: 'custom-div-icon', html: "<div style='background-color:var(--primary); width:30px; height:300px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.3);'></div>", iconSize: [30, 30], iconAnchor: [15, 15] });
-        L.marker([r.lat, r.lng]).addTo(map).bindPopup(`<b>${r.name}</b>`).openPopup();
+        // User Pulse Marker
+        const pulseIcon = L.divIcon({
+            className: '',
+            html: `<div style="position:relative; width:16px; height:16px;"><div style="background:var(--primary); width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 0 0 rgba(255,107,53,0.6); animation: pulse-ring 1.5s infinite;"></div></div>`,
+            iconSize: [20, 20], iconAnchor: [10, 10]
+        });
+        L.marker([uLat, uLng], { icon: pulseIcon }).addTo(map).bindPopup("You are here");
+
+        // Restaurant Pin
+        const resIcon = L.divIcon({
+            className: '',
+            html: `<div style="background:white; border:3px solid var(--primary); border-radius:50% 50% 50% 0; width:28px; height:28px; transform:rotate(-45deg); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.2);"><span style="transform:rotate(45deg); font-size:12px;">🍽️</span></div>`,
+            iconSize: [28, 28], iconAnchor: [14, 28]
+        });
+        L.marker([r.lat, r.lng], { icon: resIcon }).addTo(map).bindPopup(`<b>${r.name}</b>`).openPopup();
+
+        // Direction line
+        L.polyline([[uLat, uLng], [r.lat, r.lng]], { color: 'var(--primary)', weight: 3, dashArray: '10, 10', opacity: 0.7 }).addTo(map);
+        map.fitBounds([[uLat, uLng], [r.lat, r.lng]], { padding: [40, 40] });
     }, 200);
 };
 
@@ -273,16 +320,22 @@ function setupAuth() {
     authToggle.onclick = (e) => {
         e.preventDefault();
         appState.isSignup = !appState.isSignup;
+        appState.emailVerified = false;
         document.getElementById('signup-fields').style.display = appState.isSignup ? 'block' : 'none';
+        document.getElementById('user-verify-section').style.display = appState.isSignup ? 'block' : 'none';
         document.getElementById('auth-submit-btn').textContent = appState.isSignup ? 'Create Account' : 'Sign In';
         authToggle.textContent = appState.isSignup ? 'Already have an account? Login' : "Don't have an account? Sign Up";
     };
-
     authForm.onsubmit = async (e) => {
         e.preventDefault();
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
         const name = document.getElementById('reg-name').value;
+
+        if (appState.isSignup && !appState.emailVerified) {
+            alert("Please verify your email first.");
+            return;
+        }
         const url = appState.isSignup ? '/api/auth/register' : '/api/auth/login';
         const body = appState.isSignup ? { email, password, name, role: 'user' } : { email, password };
         try {
@@ -292,8 +345,11 @@ function setupAuth() {
             });
             const data = await res.json();
             if (data.success) {
-                if (appState.isSignup) { alert("Welcome! Sign in to continue."); appState.isSignup = false; authToggle.click(); }
-                else {
+                if (appState.isSignup) { 
+                    alert("Welcome! Sign in to continue."); 
+                    appState.isSignup = false; 
+                    authToggle.click(); 
+                } else {
                     appState.user = data.user;
                     localStorage.setItem('user', JSON.stringify(data.user));
                     authModal.style.display = 'none';
@@ -303,8 +359,10 @@ function setupAuth() {
             } else { alert(data.message || "Authentication failed."); }
         } catch (err) { alert("Check server connection."); }
     };
+
     document.querySelectorAll('.close-modal').forEach(btn => btn.onclick = () => btn.closest('.modal').style.display = 'none');
 }
+
 
 function updateAuthUI() {
     const loginBtn = document.getElementById('login-btn');
@@ -338,3 +396,47 @@ function handleLogout() { localStorage.removeItem('user'); window.location.reloa
 window.closeDetails = () => { document.getElementById('details-modal').style.display = 'none'; };
 window.hideResults = () => { document.getElementById('results-page').classList.remove('active'); document.getElementById('step-5').classList.add('active'); };
 window.checkAdminCode = (e) => { if (prompt("Access Code Required:") === '1010') return true; alert("Unauthorized."); e.preventDefault(); return false; };
+
+window.sendUserVerificationCode = async () => {
+    const email = document.getElementById('login-email').value;
+    if (!email) { alert("Please enter email first."); return; }
+    
+    const btn = document.getElementById('user-send-code-btn');
+    btn.disabled = true;
+    btn.textContent = "Sending...";
+
+    try {
+        const res = await fetch('http://localhost:3000/api/auth/send_verification', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('user-code-sent-msg').style.display = 'block';
+            document.getElementById('user-otp-row').style.display = 'block';
+            btn.textContent = "Resend Code";
+            setTimeout(() => btn.disabled = false, 5000);
+        } else { alert(data.message); btn.disabled = false; btn.textContent = "Send Verification Code"; }
+    } catch (err) { alert("Error connecting to server."); btn.disabled = false; btn.textContent = "Send Verification Code"; }
+};
+
+window.verifyUserCode = async () => {
+    const email = document.getElementById('login-email').value;
+    const code = document.getElementById('user-otp-input').value;
+    if (!code) { alert("Please enter the 6-digit code."); return; }
+
+    try {
+        const res = await fetch('http://localhost:3000/api/auth/verify_code', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code })
+        });
+        const data = await res.json();
+        if (data.success) {
+            appState.emailVerified = true;
+            document.getElementById('user-verified-badge').style.display = 'inline-block';
+            document.getElementById('user-otp-row').style.display = 'none';
+            document.getElementById('user-code-sent-msg').style.display = 'none';
+            document.getElementById('user-send-code-btn').style.display = 'none';
+        } else { alert(data.message || "Invalid Code"); }
+    } catch (err) { alert("Verification failed."); }
+};

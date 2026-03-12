@@ -169,6 +169,23 @@
                     <input type="text" id="reg-name" placeholder="Full Name">
                 </div>
                 <input type="email" id="login-email" placeholder="Email Address" required>
+                <!-- Verification Section -->
+                <div id="user-verify-section" style="display:none; margin: 0.5rem 0 1rem;">
+                    <button type="button" id="user-send-code-btn" onclick="sendUserVerificationCode()" class="btn-ghost"
+                        style="width:100%; border:1px solid var(--border); padding:0.6rem; border-radius:10px; font-weight:600;">
+                        Send Verification Code
+                    </button>
+                    <span id="user-code-sent-msg" style="display:none; font-size:0.8rem; color:var(--text-muted);">Code
+                        sent to your email!</span>
+                    <span id="user-verified-badge" style="display:none; color:var(--success); font-weight:700;"><i
+                            class="fas fa-check-circle"></i> Verified</span>
+                    <div id="user-otp-row" style="display:none; margin-top:0.5rem;">
+                        <input type="text" id="user-otp-input" placeholder="6-digit code"
+                            style="text-align:center; letter-spacing:0.3em;">
+                        <button type="button" onclick="verifyUserCode()" class="btn-login"
+                            style="width:100%; margin-top:0.5rem; padding:0.6rem;">Verify Code</button>
+                    </div>
+                </div>
                 <input type="password" id="login-password" placeholder="Password" required>
                 <button type="submit" id="auth-submit-btn" class="btn-big btn-primary-glow" style="width:100%;">Sign
                     In</button>

@@ -3,7 +3,16 @@ import socketserver
 import json
 import os
 import time
+import random
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from urllib.parse import parse_qs, urlparse
+
+# Email configuration (Optional fallback to console)
+EMAIL_SENDER = ""
+EMAIL_PASSWORD = ""
+verification_codes = {}
 
 PORT = 3000
 DB_FILE = "restaurants.json"
@@ -15,13 +24,18 @@ def load_json(filename, default):
         with open(filename, 'r', encoding='utf-8') as f:
             try:
                 return json.load(f)
-            except:
+            except Exception as e:
+                print(f"❌ [DB ERROR] Failed to parse {filename}: {e}")
                 return default
     return default
 
 def save_json(filename, data):
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2)
+    try:
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+        print(f"✅ [DB] Saved {filename} ({len(data)} items)")
+    except Exception as e:
+        print(f"❌ [DB ERROR] Failed to save {filename}: {e}")
 
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -39,6 +53,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length)
         
+        print(f"📥 [POST] {parsed_path.path}")
+        
         try:
             body = json.loads(post_data.decode('utf-8')) if post_data else {}
             
@@ -48,6 +64,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 self.handle_login(body)
             elif parsed_path.path == '/api/auth/register':
                 self.handle_register(body)
+            elif parsed_path.path == '/api/auth/send_verification':
+                self.handle_send_verification(body)
+            elif parsed_path.path == '/api/auth/verify_code':
+                self.handle_verify_code(body)
             elif parsed_path.path == '/api/owner/register':
                 self.handle_owner_register(body)
             elif parsed_path.path == '/api/owner/update_menu':
@@ -136,15 +156,20 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps({"success": True}).encode('utf-8'))
 
     def handle_owner_register(self, body):
-        # Body contains restaurant info + owner email
         restaurants = load_json(DB_FILE, [])
         new_id = int(time.time())
         body['id'] = new_id
-        body['status'] = 'pending' # Needs admin approval
+        body['status'] = 'pending'
+        
+        # Ensure coords exist for map sorting
+        if 'lat' not in body or 'lng' not in body:
+            body['lat'] = 12.9716 + (random.random() - 0.5) * 0.1
+            body['lng'] = 77.5946 + (random.random() - 0.5) * 0.1
+            
         restaurants.append(body)
         save_json(DB_FILE, restaurants)
+        print(f"📝 [OWNER] Registered new restaurant: {body.get('name')} (ID: {new_id}, Status: pending)")
         
-        # Link user to restaurant
         users_data = load_json(USER_FILE, {"users": []})
         for u in users_data["users"]:
             if u["email"] == body.get('ownerEmail'):
@@ -152,27 +177,67 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 break
         save_json(USER_FILE, users_data)
 
-        self.send_response(200)
+        self.respond(200, {"success": True, "restaurantId": new_id})
+
+    def handle_send_verification(self, body):
+        email = body.get('email', '').strip()
+        if not email: return self.respond(400, {"success": False, "message": "Email required"})
+        
+        code = str(random.randint(100000, 999999))
+        verification_codes[email] = {"code": code, "expiry": time.time() + 600}
+        
+        print("\n" + "="*60)
+        print(f"📧 [SAVOUR] VERIFICATION OTP FOR {email}: {code}")
+        print("="*60 + "\n")
+        
+        try:
+            if not EMAIL_SENDER or not EMAIL_PASSWORD: raise Exception("No SMTP config")
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = 'SAVOUR Verification Code'
+            msg['From'] = EMAIL_SENDER
+            msg['To'] = email
+            html = f"<h2>Code: {code}</h2><p>Expires in 10 mins.</p>"
+            msg.attach(MIMEText(html, 'html'))
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+                s.login(EMAIL_SENDER, EMAIL_PASSWORD)
+                s.send_message(msg)
+            return self.respond(200, {"success": True, "message": "Sent!"})
+        except:
+            return self.respond(200, {"success": True, "message": "Check server terminal for code (Local Dev Mask)"})
+
+    def handle_verify_code(self, body):
+        email = body.get('email')
+        code = body.get('code')
+        if email in verification_codes:
+            if verification_codes[email]['code'] == code and time.time() < verification_codes[email]['expiry']:
+                del verification_codes[email]
+                return self.respond(200, {"success": True})
+        self.respond(400, {"success": False, "message": "Invalid or expired code"})
+
+    def respond(self, status, data):
+        self.send_response(status)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
-        self.wfile.write(json.dumps({"success": True, "restaurantId": new_id}).encode('utf-8'))
+        self.wfile.write(json.dumps(data).encode('utf-8'))
 
     def handle_admin_approve(self, body):
-        res_id = body.get('restaurantId')
+        res_id = str(body.get('restaurantId'))
         restaurants = load_json(DB_FILE, [])
+        found = False
         for r in restaurants:
-            if r.get('id') == res_id:
+            if str(r.get('id')) == res_id:
                 r['status'] = 'approved'
+                found = True
                 break
-        save_json(DB_FILE, restaurants)
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps({"success": True}).encode('utf-8'))
+        if found:
+            save_json(DB_FILE, restaurants)
+            return self.respond(200, {"success": True})
+        self.respond(404, {"success": False, "message": "Restaurant not found"})
 
     def handle_admin_list_pending(self):
         restaurants = load_json(DB_FILE, [])
         pending = [r for r in restaurants if r.get('status') == 'pending']
+        print(f"👁️ [ADMIN] Total entries: {len(restaurants)}, Pending found: {len(pending)}")
         self.send_response(200)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
@@ -203,26 +268,34 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(user_history).encode('utf-8'))
 
     def handle_update_menu(self, body):
-        res_id = body.get('restaurantId')
+        res_id = str(body.get('restaurantId'))
         dishes = body.get('dishes')
-        # Also support full metadata updates
         name = body.get('name')
         cuisine = body.get('cuisine')
         budget = body.get('budget')
         chef = body.get('chef')
+        dietary = body.get('dietary')
+        serviceMode = body.get('serviceMode')
+        facilities = body.get('facilities')
         
         restaurants = load_json(DB_FILE, [])
+        found = False
         for r in restaurants:
-            if r.get('id') == res_id:
+            if str(r.get('id')) == res_id:
                 if dishes is not None: r['dishes'] = dishes
                 if name: r['name'] = name
                 if cuisine: r['cuisine'] = cuisine
                 if budget: r['budget'] = budget
                 if chef: r['chef'] = chef
+                if dietary: r['dietary'] = dietary
+                if serviceMode: r['serviceMode'] = serviceMode
+                if facilities is not None: r['facilities'] = facilities
+                found = True
                 break
-        save_json(DB_FILE, restaurants)
-        self.send_response(200)
-        self.end_headers()
+        if found:
+            save_json(DB_FILE, restaurants)
+            return self.respond(200, {"success": True})
+        self.respond(404, {"success": False, "message": "Restaurant not found"})
 
     def handle_get_restaurant_info(self, body):
         res_id = body.get('restaurantId')

@@ -159,11 +159,24 @@
             <div id="signup-fields" style="display: none;">
                 <div class="input-group"><input type="text" id="p-reg-name" placeholder="Full Name"></div>
                 <div class="input-group"><input type="email" id="p-reg-email" placeholder="Business Email"></div>
+                <!-- Partner Verification -->
+                <div id="p-verify-section" style="margin-bottom:1.2rem; text-align:left;">
+                    <button type="button" id="p-send-code-btn" onclick="sendPartnerCode()" class="btn-edit"
+                        style="width:100%; padding:0.8rem;">Send Code</button>
+                    <div id="p-otp-row" style="display:none; margin-top:0.8rem; display:flex; gap:0.5rem;">
+                        <input type="text" id="p-otp-input" placeholder="6-digit code"
+                            style="flex:1; text-align:center;">
+                        <button type="button" onclick="verifyPartnerCode()" class="btn-login"
+                            style="padding:0.8rem;">Verify</button>
+                    </div>
+                    <span id="p-verified-badge" style="display:none; color:var(--success); font-weight:700;"><i
+                            class="fas fa-check-circle"></i> Business Verified</span>
+                </div>
                 <div class="input-group"><input type="password" id="p-reg-pass" placeholder="Create Password"></div>
                 <hr style="margin: 1.5rem 0; opacity: 0.2;">
                 <h3 style="margin-bottom: 1rem;">Restaurant Basics</h3>
-                <div class="input-group"><input type="text" id="p-res-name" placeholder="Restaurant Name"></div>
                 <div class="input-group">
+                    <label>Cuisine Type</label>
                     <select id="p-res-cuisine">
                         <option>Indian</option>
                         <option>Chinese</option>
@@ -171,6 +184,35 @@
                         <option>American</option>
                         <option>Japanese</option>
                     </select>
+                </div>
+                <div class="input-group">
+                    <label>Dietary Preference</label>
+                    <select id="p-res-dietary">
+                        <option value="Both">Both (Veg & Non-Veg)</option>
+                        <option value="Veg">Vegetarian Only</option>
+                        <option value="Non-Veg">Non-Vegetarian Only</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Service Mode</label>
+                    <select id="p-res-service">
+                        <option value="Dine-in">Dine-in</option>
+                        <option value="Delivery">Delivery</option>
+                        <option value="Takeaway">Takeaway</option>
+                        <option value="All">All Modes</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Initial Rating</label>
+                    <input type="number" id="p-res-rating" step="0.1" min="1" max="5" value="4.0">
+                </div>
+                <div class="input-group" style="text-align: left;">
+                    <label>Essentials</label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                        <label style="font-weight: 400;"><input type="checkbox" class="p-res-essentials" value="AC"> AC</label>
+                        <label style="font-weight: 400;"><input type="checkbox" class="p-res-essentials" value="Wi-Fi"> Wi-Fi</label>
+                        <label style="font-weight: 400;"><input type="checkbox" class="p-res-essentials" value="Parking"> Parking</label>
+                    </div>
                 </div>
                 <button class="btn-login" style="width: 100%;" onclick="pSignup()">Create Account</button>
                 <p style="margin-top: 1.5rem;">Already a partner? <a href="#" onclick="togglePAuth(false)">Sign In</a>
@@ -236,7 +278,31 @@
                         <option>Japanese</option>
                     </select>
                 </div>
-                <div class="input-group"><label>Average Budget (for two)</label><input type="number" id="edit-budget">
+                <div class="input-group"><label>Average Budget (for two)</label><input type="number" id="edit-budget"></div>
+                <div class="input-group">
+                    <label>Dietary Preference</label>
+                    <select id="edit-dietary">
+                        <option value="Both">Both</option>
+                        <option value="Veg">Vegetarian Only</option>
+                        <option value="Non-Veg">Non-Vegetarian Only</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Service Mode</label>
+                    <select id="edit-service">
+                        <option value="Dine-in">Dine-in</option>
+                        <option value="Delivery">Delivery</option>
+                        <option value="Takeaway">Takeaway</option>
+                        <option value="All">All Modes</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Essentials</label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="AC"> AC</label>
+                        <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="Wi-Fi"> Wi-Fi</label>
+                        <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="Parking"> Parking</label>
+                    </div>
                 </div>
                 <hr style="margin: 1.5rem 0; opacity: 0.2;">
                 <h3>Chef Details</h3>
@@ -268,6 +334,7 @@
     <script>
         let currentUser = JSON.parse(localStorage.getItem('user'));
         let resData = null;
+        let partnerVerified = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             if (currentUser && currentUser.role === 'partner') { showDashboard(); }
@@ -304,25 +371,46 @@
             const name = document.getElementById('p-reg-name').value;
             const resName = document.getElementById('p-res-name').value;
             const resCuisine = document.getElementById('p-res-cuisine').value;
+            const resDietary = document.getElementById('p-res-dietary').value;
+            const resService = document.getElementById('p-res-service').value;
+            const resRating = parseFloat(document.getElementById('p-res-rating').value);
+            const resEssentials = Array.from(document.querySelectorAll('.p-res-essentials:checked')).map(cb => cb.value);
 
+            if (!partnerVerified) return alert("Verify your business email first.");
             try {
                 // 1. Register User
                 const uRes = await fetch('http://localhost:3000/api/auth/register', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password: pass, name, role: 'partner' })
                 });
-                if (!uRes.ok) return alert("Signup failed.");
+                if (!uRes.ok) {
+                    const errData = await uRes.json();
+                    return alert("User registration failed: " + (errData.message || "Unknown error"));
+                }
 
                 // 2. Register Restaurant
                 const rRes = await fetch('http://localhost:3000/api/owner/register', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        ownerEmail: email, name: resName, cuisine: resCuisine, budget: 1000,
+                        ownerEmail: email, 
+                        name: resName, 
+                        cuisine: resCuisine, 
+                        dietary: resDietary,
+                        serviceMode: resService,
+                        rating: resRating,
+                        facilities: resEssentials,
+                        budget: 1000,
                         chef: { name: 'Expert Chef', exp: 5, img: '' }
                     })
                 });
-                if (rRes.ok) { alert("Successfully registered! Please sign in."); togglePAuth(false); }
-            } catch (e) { alert("Error connecting to server."); }
+                if (rRes.ok) { 
+                    alert("Successfully registered! Please sign in."); 
+                    togglePAuth(false); 
+                } else {
+                    const errData = await rRes.json();
+                    alert("Restaurant registration failed: " + (errData.message || rRes.statusText));
+                }
+            } catch (e) { alert("Error connecting to server: " + e.message); }
         }
 
         async function showDashboard() {
@@ -363,6 +451,12 @@
             document.getElementById('edit-name').value = resData.name;
             document.getElementById('edit-cuisine').value = resData.cuisine;
             document.getElementById('edit-budget').value = resData.budget;
+            document.getElementById('edit-dietary').value = resData.dietary || 'Both';
+            document.getElementById('edit-service').value = resData.serviceMode || 'Dine-in';
+            const facilities = resData.facilities || [];
+            document.querySelectorAll('.edit-essentials').forEach(cb => {
+                cb.checked = facilities.includes(cb.value);
+            });
             document.getElementById('edit-chef-name').value = resData.chef?.name || '';
             document.getElementById('edit-chef-exp').value = resData.chef?.exp || '';
             document.getElementById('edit-modal').style.display = 'flex';
@@ -376,6 +470,9 @@
             resData.name = document.getElementById('edit-name').value;
             resData.cuisine = document.getElementById('edit-cuisine').value;
             resData.budget = document.getElementById('edit-budget').value;
+            resData.dietary = document.getElementById('edit-dietary').value;
+            resData.serviceMode = document.getElementById('edit-service').value;
+            resData.facilities = Array.from(document.querySelectorAll('.edit-essentials:checked')).map(cb => cb.value);
             resData.chef = {
                 name: document.getElementById('edit-chef-name').value,
                 exp: document.getElementById('edit-chef-exp').value
@@ -415,6 +512,36 @@
                     chef: resData.chef
                 })
             });
+        }
+
+        async function sendPartnerCode() {
+            const email = document.getElementById('p-reg-email').value;
+            if (!email) return alert("Enter email.");
+            const btn = document.getElementById('p-send-code-btn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            const res = await fetch('http://localhost:3000/api/auth/send_verification', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            if (res.ok) {
+                document.getElementById('p-otp-row').style.display = 'flex';
+                btn.innerHTML = 'Resend Code';
+            }
+        }
+
+        async function verifyPartnerCode() {
+            const email = document.getElementById('p-reg-email').value;
+            const code = document.getElementById('p-otp-input').value;
+            const res = await fetch('http://localhost:3000/api/auth/verify_code', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, code })
+            });
+            if (res.ok) {
+                partnerVerified = true;
+                document.getElementById('p-otp-row').style.display = 'none';
+                document.getElementById('p-send-code-btn').style.display = 'none';
+                document.getElementById('p-verified-badge').style.display = 'block';
+            } else { alert("Wrong code."); }
         }
 
         function logout() { localStorage.removeItem('user'); window.location.reload(); }
