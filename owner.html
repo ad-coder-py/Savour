@@ -401,19 +401,22 @@
                         alert("OTP sent to your email!");
                     } else {
                         alert("Login Error: This account does not have partner permissions.");
-                        btn.disabled = false;
-                        btn.innerText = originalText;
                     }
                 } else { 
                     alert(data.message || "Login failed."); 
-                    btn.disabled = false;
-                    btn.innerText = originalText;
                 }
             } catch (e) { 
                 console.error("Login catch:", e);
                 alert("Connection failed: " + e.message); 
-                btn.disabled = false;
-                btn.innerText = originalText;
+            } finally {
+                if (!currentUser || currentUser.role !== 'partner') {
+                    btn.disabled = false;
+                    // Only reset text if we aren't waiting for OTP
+                    const otpSection = document.getElementById('p-login-otp-section');
+                    if (!otpSection || otpSection.style.display === 'none') {
+                        btn.innerText = originalText;
+                    }
+                }
             }
         }
 

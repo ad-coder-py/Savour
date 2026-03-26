@@ -90,8 +90,7 @@
     "budget": "300",
     "chef": {
       "name": "Expert Chef 103",
-      "exp": "5",
-      "img": ""
+      "exp": "5"
     },
     "id": 1774472407,
     "status": "approved",
