@@ -87,55 +87,108 @@
 
 <body>
     <div class="admin-sidebar">
-        <h2 style="font-family: var(--font-heading);">Admin Console</h2>
-        <nav style="margin-top: 2rem;">
-            <a href="#" class="btn-ghost" style="display: block; margin-bottom: 1rem;">Approvals</a>
-            <a href="index.html" class="btn-ghost" style="display: block;">Back to Home</a>
+        <h2 style="font-family: var(--font-heading); margin-bottom: 1rem;">Admin Console</h2>
+        <button class="btn-ghost" onclick="loadData()" style="width:100%; margin-bottom: 2rem; border-color: var(--primary); color: var(--primary);">
+            <i class="fas fa-sync-alt"></i> Refresh Data
+        </button>
+        <nav>
+            <a href="#" id="tab-pending" class="btn-ghost active" onclick="showView('pending')" style="display: block; margin-bottom: 0.5rem; text-decoration:none;">
+                <i class="fas fa-hourglass-half"></i> Pending Approvals
+            </a>
+            <a href="#" id="tab-approved" class="btn-ghost" onclick="showView('approved')" style="display: block; margin-bottom: 1.5rem; text-decoration:none;">
+                <i class="fas fa-check-circle"></i> Existing Partners
+            </a>
+            <a href="index.html" class="btn-ghost" style="display: block; text-decoration:none; margin-bottom: 0.5rem;">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+            <button class="btn-ghost" onclick="logout()" style="width:100%; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
         </nav>
     </div>
     <main class="admin-main">
-        <h1>Pending Approvals</h1>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">Review and approve partner restaurant listings.</p>
+        <h1 id="view-title">Pending Approvals</h1>
+        <p id="view-desc" style="color: var(--text-muted); margin-bottom: 2rem;">Review and approve partner restaurant listings.</p>
 
-        <div id="pending-list">
-            <p>Loading pending requests...</p>
+        <div id="list-container">
+            <p>Loading...</p>
         </div>
     </main>
 
     <div id="edit-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
             <h2 style="font-family: var(--font-heading);">Edit Details</h2>
             <input type="hidden" id="edit-id">
-            <label>Restaurant Name</label>
-            <input type="text" id="edit-name">
-            <label>Cuisine</label>
-            <input type="text" id="edit-cuisine">
-            <label>Budget</label>
-            <select id="edit-budget">
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-            </select>
-            <label>Dietary</label>
-            <select id="edit-dietary">
-                <option value="Both">Both</option>
-                <option value="Veg">Vegetarian Only</option>
-                <option value="Non-Veg">Non-Vegetarian Only</option>
-            </select>
-            <label>Service Mode</label>
-            <select id="edit-service">
-                <option value="Dine-in">Dine-in</option>
-                <option value="Delivery">Delivery</option>
-                <option value="Takeaway">Takeaway</option>
-                <option value="All">All Modes</option>
-            </select>
-            <label>Essentials</label>
-            <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem;">
-                <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="AC"> AC</label>
-                <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="Wi-Fi"> Wi-Fi</label>
-                <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="Parking"> Parking</label>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label>Restaurant Name</label>
+                    <input type="text" id="edit-name">
+                </div>
+                <div>
+                    <label>Cuisine</label>
+                    <input type="text" id="edit-cuisine">
+                </div>
             </div>
-            <div class="modal-actions">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label>Budget</label>
+                    <input type="text" id="edit-budget">
+                </div>
+                <div>
+                    <label>Dietary</label>
+                    <select id="edit-dietary">
+                        <option value="Both">Both</option>
+                        <option value="Veg">Veg</option>
+                        <option value="Non-Veg">Non-Veg</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Service Mode</label>
+                    <select id="edit-service">
+                        <option value="Dine-in">Dine-in</option>
+                        <option value="Delivery">Delivery</option>
+                        <option value="Takeaway">Takeaway</option>
+                        <option value="All">All</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label>Chef Name</label>
+                    <input type="text" id="edit-chef-name">
+                </div>
+                <div>
+                    <label>Experience (Years)</label>
+                    <input type="number" id="edit-chef-exp">
+                </div>
+            </div>
+
+            <label>Google Maps Link</label>
+            <input type="text" id="edit-map-link">
+
+            <div style="margin-bottom: 1rem;">
+                <label>Facilities</label>
+                <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                    <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="AC"> AC</label>
+                    <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="Wi-Fi"> Wi-Fi</label>
+                    <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="Parking"> Parking</label>
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin:0;">Dishes</h3>
+                    <button class="btn-ghost" onclick="addDishField()">+ Add Dish</button>
+                </div>
+                <div id="edit-dishes-list">
+                    <!-- Dish fields will be added here -->
+                </div>
+            </div>
+
+            <div class="modal-actions" style="position: sticky; bottom: 0; background: var(--surface); padding-top: 1rem;">
                 <button class="btn-big" style="flex:1;" onclick="closeEditModal()">Cancel</button>
                 <button class="btn-big" style="flex:1; background: var(--primary); color: white;" onclick="saveEdit()">Save Changes</button>
             </div>
@@ -143,44 +196,74 @@
     </div>
 
     <script>
-        let pendingRestaurants = [];
+        let currentMode = 'pending'; // 'pending' or 'approved'
+        let currentRestaurants = [];
 
-        async function loadPending() {
+        async function showView(mode) {
+            currentMode = mode;
+            document.getElementById('view-title').innerText = mode === 'pending' ? 'Pending Approvals' : 'Existing Partners';
+            document.getElementById('view-desc').innerText = mode === 'pending' ? 'Review and approve partner restaurant listings.' : 'Manage existing partner restaurants.';
+            
+            // Update sidebar UI
+            document.querySelectorAll('.admin-sidebar .btn-ghost').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${mode}`).classList.add('active');
+            
+            loadData();
+        }
+
+        async function loadData() {
+            const endpoint = currentMode === 'pending' ? '/api/admin/list_pending' : '/api/admin/list_partners';
             try {
-                const res = await fetch('http://localhost:3000/api/admin/list_pending', { method: 'POST' });
+                const res = await fetch(`http://localhost:3000${endpoint}`, { method: 'POST' });
                 if (!res.ok) throw new Error("Server error: " + res.status);
                 const data = await res.json();
-                pendingRestaurants = data;
-                const list = document.getElementById('pending-list');
-
-                if (data.length === 0) {
-                    list.innerHTML = '<h3>Everything is up to date!</h3>';
-                    return;
-                }
-
-                list.innerHTML = '';
-                data.forEach((r, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'approve-card';
-                    const facilities = (r.facilities || []).join(', ');
-                    div.innerHTML = `
-                        <div style="flex:1;">
-                            <h3>${r.name}</h3>
-                            <p><b>Cuisine:</b> ${r.cuisine} | <b>Dietary:</b> ${r.dietary || 'Both'}</p>
-                            <p><b>Service:</b> ${r.serviceMode || 'Dine-in'} | <b>Rating:</b> ${r.rating || 4.0}</p>
-                            <p><b>Essentials:</b> ${facilities || 'None'}</p>
-                            <span class="status-chip status-pending">Pending Approval</span>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <button class="btn-ghost" onclick='openEditModal(${index})'>Edit</button>
-                            <button class="btn-big" style="background: var(--primary); color: white;" onclick="approve(${r.id})">Approve</button>
-                        </div>
-                    `;
-                    list.appendChild(div);
-                });
+                currentRestaurants = data;
+                renderList();
             } catch (err) {
-                document.getElementById('pending-list').innerHTML = `<p style="color:red;">Failed to load requests: ${err.message}</p>`;
+                document.getElementById('list-container').innerHTML = `<p style="color:red;">Failed to load data: ${err.message}</p>`;
             }
+        }
+
+        function renderList() {
+            const list = document.getElementById('list-container');
+            if (currentRestaurants.length === 0) {
+                list.innerHTML = `<h3>No ${currentMode} partners found.</h3>`;
+                return;
+            }
+
+            list.innerHTML = '';
+            currentRestaurants.forEach((r, index) => {
+                const div = document.createElement('div');
+                div.className = 'approve-card';
+                const facilities = (r.facilities || []).join(', ');
+                const dishesCount = (r.dishes || []).length;
+                
+                div.innerHTML = `
+                    <div style="flex:1;">
+                        <h3>${r.name}</h3>
+                        <p><b>Cuisine:</b> ${r.cuisine} | <b>Dietary:</b> ${r.dietary || 'Both'}</p>
+                        <p><b>Service:</b> ${r.serviceMode || 'Dine-in'} | <b>Rating:</b> ${r.rating || 4.0}</p>
+                        <p><b>Dishes:</b> ${dishesCount} items listed</p>
+                        <p><b>Essentials:</b> ${facilities || 'None'}</p>
+                        <p><b>Map:</b> <a href="${r.gmapLink || '#'}" target="_blank" style="color:var(--primary); text-decoration:underline;">View on Map</a> 
+                           <span style="font-size:0.75rem; color:${(r.lat && r.lng) ? '#166534':'#92400e'}">
+                               (${(r.lat && r.lng) ? '📍 Resolved' : '❓ Pending Resolution'})
+                           </span>
+                        </p>
+                        <span class="status-chip ${currentMode === 'pending' ? 'status-pending' : ''}" style="${currentMode === 'approved' ? 'background:#dcfce7; color:#166534;' : ''}">
+                            ${currentMode === 'pending' ? 'Pending Approval' : 'Approved Partner'}
+                        </span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="btn-ghost" onclick='openEditModal(${index})'>${currentMode === 'approved' ? 'Edit & View Dishes' : 'Edit'}</button>
+                        ${currentMode === 'pending' ? `
+                            <button class="btn-big" style="background: #ef4444; color: white;" onclick="reject(${r.id})">Do not Approve</button>
+                            <button class="btn-big" style="background: var(--primary); color: white;" onclick="approve(${r.id})">Approve</button>
+                        ` : ''}
+                    </div>
+                `;
+                list.appendChild(div);
+            });
         }
 
         async function approve(id) {
@@ -193,26 +276,101 @@
                 const data = await res.json();
                 if (data.success) {
                     alert("Restaurant Approved!");
-                    loadPending();
+                    loadData();
                 } else {
                     alert("Approval failed: " + data.message);
                 }
             } catch (err) { alert("Network error: " + err.message); }
         }
 
+        async function reject(id) {
+            if(!confirm("Are you sure you want to reject this partner?")) return;
+            try {
+                const res = await fetch('http://localhost:3000/api/admin/reject', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ restaurantId: id })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Restaurant Rejected.");
+                    loadData();
+                } else {
+                    alert("Rejection failed: " + data.message);
+                }
+            } catch (err) { alert("Network error: " + err.message); }
+        }
+
         function openEditModal(index) {
-            const r = pendingRestaurants[index];
+            const r = currentRestaurants[index];
             document.getElementById('edit-id').value = r.id;
-            document.getElementById('edit-name').value = r.name;
-            document.getElementById('edit-cuisine').value = r.cuisine;
-            document.getElementById('edit-budget').value = r.budget || 'Medium';
+            document.getElementById('edit-name').value = r.name || '';
+            document.getElementById('edit-cuisine').value = r.cuisine || '';
+            document.getElementById('edit-budget').value = r.budget || '';
             document.getElementById('edit-dietary').value = r.dietary || 'Both';
             document.getElementById('edit-service').value = r.serviceMode || 'Dine-in';
+            document.getElementById('edit-chef-name').value = (r.chef && r.chef.name) || '';
+            document.getElementById('edit-chef-exp').value = (r.chef && r.chef.exp) || '';
+            document.getElementById('edit-map-link').value = r.gmapLink || '';
+            
             const facilities = r.facilities || [];
             document.querySelectorAll('.edit-essentials').forEach(cb => {
                 cb.checked = facilities.includes(cb.value);
             });
+
+            // Handle Dishes
+            const dishesList = document.getElementById('edit-dishes-list');
+            dishesList.innerHTML = '';
+            if (r.dishes && r.dishes.length > 0) {
+                r.dishes.forEach(dish => addDishField(dish));
+            } else {
+                addDishField(); // Add one empty field by default if none
+            }
+
             document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function addDishField(dish = { name: '', price: '', img: '', status: 'pending' }) {
+            const container = document.getElementById('edit-dishes-list');
+            const div = document.createElement('div');
+            const id = document.getElementById('edit-id').value;
+            div.className = 'dish-entry';
+            div.style.display = 'grid';
+            div.style.gridTemplateColumns = '1.5fr 1fr 1.5fr auto auto';
+            div.style.gap = '0.5rem';
+            div.style.marginBottom = '0.5rem';
+            div.style.alignItems = 'center';
+            
+            const isPending = dish.status === 'pending';
+            
+            div.innerHTML = `
+                <input type="text" placeholder="Dish Name" class="dish-name" value="${dish.name}">
+                <input type="number" placeholder="Price" class="dish-price" value="${dish.price}">
+                <input type="text" placeholder="Image URL" class="dish-img" value="${dish.img}">
+                <div style="font-size: 0.75rem; color: ${isPending ? '#92400e' : '#166534'}; background: ${isPending ? '#fef3c7' : '#dcfce7'}; padding: 2px 6px; border-radius: 4px; text-align:center;">
+                    ${dish.status || 'pending'}
+                </div>
+                <div style="display:flex; gap: 4px;">
+                    ${isPending ? `<button class="btn-ghost" onclick="approveDish(${id}, '${dish.name}')" style="color:var(--primary); padding: 4px;"><i class="fas fa-check"></i></button>` : ''}
+                    <button class="btn-ghost" onclick="this.parentElement.parentElement.remove()" style="color:#ef4444; padding: 4px;"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        async function approveDish(resId, dishName) {
+            if(!dishName) return alert("Save changes first if this is a new dish.");
+            try {
+                const res = await fetch('http://localhost:3000/api/admin/approve_dish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ restaurantId: resId, dishName: dishName, status: 'approved' })
+                });
+                if (res.ok) {
+                    alert("Dish Approved!");
+                    saveEdit(); // Save all changes and refresh
+                }
+            } catch (err) { alert("Error: " + err.message); }
         }
 
         function closeEditModal() {
@@ -221,29 +379,49 @@
 
         async function saveEdit() {
             const id = parseInt(document.getElementById('edit-id').value);
-            const name = document.getElementById('edit-name').value;
-            const cuisine = document.getElementById('edit-cuisine').value;
-            const budget = document.getElementById('edit-budget').value;
-            const dietary = document.getElementById('edit-dietary').value;
-            const serviceMode = document.getElementById('edit-service').value;
-            const facilities = Array.from(document.querySelectorAll('.edit-essentials:checked')).map(cb => cb.value);
+            const body = {
+                restaurantId: id,
+                name: document.getElementById('edit-name').value,
+                cuisine: document.getElementById('edit-cuisine').value,
+                budget: document.getElementById('edit-budget').value,
+                dietary: document.getElementById('edit-dietary').value,
+                serviceMode: document.getElementById('edit-service').value,
+                facilities: Array.from(document.querySelectorAll('.edit-essentials:checked')).map(cb => cb.value),
+                gmapLink: document.getElementById('edit-map-link').value,
+                chef: {
+                    name: document.getElementById('edit-chef-name').value,
+                    exp: document.getElementById('edit-chef-exp').value,
+                    img: ''
+                },
+                dishes: Array.from(document.querySelectorAll('.dish-entry')).map(entry => ({
+                    name: entry.querySelector('.dish-name').value,
+                    price: parseFloat(entry.querySelector('.dish-price').value) || 0,
+                    img: entry.querySelector('.dish-img').value
+                    // Status is preserved on backend if name matches
+                })).filter(d => d.name.trim() !== '')
+            };
 
-            const res = await fetch('http://localhost:3000/api/owner/update_menu', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ restaurantId: id, name, cuisine, budget, dietary, serviceMode, facilities })
-            });
-            
-            if (res.ok) {
-                alert("Changes saved!");
-                closeEditModal();
-                loadPending();
-            } else {
-                alert("Failed to save changes.");
-            }
+            try {
+                const res = await fetch('http://localhost:3000/api/owner/update_menu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                if (res.ok) {
+                    alert("Changes saved!");
+                    closeEditModal();
+                    loadData();
+                } else {
+                    alert("Failed to save changes.");
+                }
+            } catch (err) { alert("Network error: " + err.message); }
         }
-
-        loadPending();
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+        loadData();
     </script>
 </body>
 

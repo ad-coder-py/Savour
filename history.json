@@ -1,22 +1,75 @@
 {
   "adr23cs010@cea.ac.in": [
     {
-      "restaurantName": "Spicy Villa",
-      "id": 1,
-      "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+      "restaurantName": "Emarath Mandi",
+      "id": 1773293960,
       "date": "12/3/2026"
     },
     {
-      "restaurantName": "The Golden Dragon",
-      "id": 6,
-      "image": "https://images.unsplash.com/photo-1525164286253-04e68b9d94c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+      "restaurantName": "Emarath Mandi",
+      "id": 1773293960,
+      "date": "12/3/2026"
+    },
+    {
+      "restaurantName": "Emarath Mandi",
+      "id": 1773293960,
+      "date": "12/3/2026"
+    },
+    {
+      "restaurantName": "Emarath Mandi",
+      "id": 1773293960,
       "date": "12/3/2026"
     },
     {
       "restaurantName": "Pasta Point",
       "id": 4,
       "image": "https://images.unsplash.com/photo-1481931098730-318b6f776db0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-      "date": "3/5/2026"
+      "date": "12/3/2026"
+    }
+  ],
+  "abhinavsanthosh2109.twwi@gmail.com": [
+    {
+      "restaurantName": "Pasta Point",
+      "id": 4,
+      "image": "https://images.unsplash.com/photo-1481931098730-318b6f776db0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
+      "date": "12/3/2026"
+    },
+    {
+      "restaurantName": "Emarath Mandi",
+      "id": 1773293960,
+      "date": "12/3/2026"
+    },
+    {
+      "restaurantName": "Emarath Mandi",
+      "id": 1773293960,
+      "date": "12/3/2026"
+    }
+  ],
+  "adarshj@ieee.org": [
+    {
+      "restaurantName": "Padma Cafe",
+      "id": 1774472407,
+      "date": "26/3/2026"
+    },
+    {
+      "restaurantName": "Padma Cafe",
+      "id": 1774472407,
+      "date": "26/3/2026"
+    },
+    {
+      "restaurantName": "Padma Cafe",
+      "id": 1774472407,
+      "date": "26/3/2026"
+    },
+    {
+      "restaurantName": "Pepino Restaurant & Caterers",
+      "id": 1774470565,
+      "date": "26/3/2026"
+    },
+    {
+      "restaurantName": "Pepino Restaurant & Caterers",
+      "id": 1774470565,
+      "date": "26/3/2026"
     }
   ]
 }

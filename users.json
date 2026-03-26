@@ -1,43 +1,31 @@
 {
   "users": [
     {
-      "email": "user@example.com",
-      "password": "password",
-      "role": "user",
-      "name": "Alex"
-    },
-    {
-      "email": "admin@savour.com",
-      "password": "admin",
-      "role": "admin",
-      "name": "Head Chef"
-    },
-    {
-      "email": "partner@spicevilla.com",
-      "password": "partner",
-      "role": "partner",
-      "name": "Spice Villa Owner",
-      "restaurantId": 1
-    },
-    {
       "email": "adr23cs010@cea.ac.in",
-      "password": "adr123",
-      "name": "test_adarsh",
+      "password": "emarath",
+      "name": "Salman",
+      "role": "partner",
+      "restaurantId": 1774464057
+    },
+    {
+      "email": "adarshadur123@gmail.com",
+      "password": "pepino",
+      "name": "Manoj",
+      "role": "partner",
+      "restaurantId": 1774470565
+    },
+    {
+      "email": "adarshj@ieee.org",
+      "password": "Test_AJ",
+      "name": "Test_AJ",
       "role": "user"
     },
     {
-      "email": "annankada@gmail.com",
-      "password": "annan123",
-      "name": "Annan",
+      "email": "adarsh0612j@gmail.com",
+      "password": "padmacafe",
+      "name": "Mahishan",
       "role": "partner",
-      "restaurantId": 1772734683
-    },
-    {
-      "email": "arabian@gmail.com",
-      "password": "arabian123",
-      "name": "Arabian",
-      "role": "partner",
-      "restaurantId": 1773281127
+      "restaurantId": 1774472407
     }
   ]
 }

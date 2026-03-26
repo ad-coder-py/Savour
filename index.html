@@ -10,9 +10,6 @@
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Poppins:wght@300;400;600;700&family=Inter:wght@400;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Leaflet for Maps -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
 <body class="hover-magnet">
@@ -169,6 +166,12 @@
                     <input type="text" id="reg-name" placeholder="Full Name">
                 </div>
                 <input type="email" id="login-email" placeholder="Email Address" required>
+                <!-- OTP Section (Hidden by default) -->
+                <div id="login-otp-section" style="display:none; margin: 0.5rem 0 1rem; text-align: center;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Enter the 6-digit code sent to your email</p>
+                    <input type="text" id="login-otp-input" placeholder="000000" maxlength="6" 
+                        style="text-align:center; letter-spacing:0.5em; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--primary); width: 100%; padding: 0.8rem; border-radius: 12px;">
+                </div>
                 <!-- Verification Section -->
                 <div id="user-verify-section" style="display:none; margin: 0.5rem 0 1rem;">
                     <button type="button" id="user-send-code-btn" onclick="sendUserVerificationCode()" class="btn-ghost"

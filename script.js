@@ -3,7 +3,8 @@ let appState = {
     step: 1,
     preferences: { budget: 500, cuisine: null, diet: 'Any', amenities: [] },
     user: JSON.parse(localStorage.getItem('user')) || null,
-    userLocation: null,
+    // Set to your specific starting location: College Of Engineering, Adoor
+    userLocation: { lat: 9.1323982, lng: 76.718111 },
     isSignup: false,
     emailVerified: false
 };
@@ -17,8 +18,32 @@ document.addEventListener('DOMContentLoaded', () => {
         setupAuth();
         updateAuthUI();
         if (appState.user) loadUserHistory();
+        
+        // Ultimate location request with fallback 
+        window.requestLocation = (callback) => {
+            if (!navigator.geolocation) return;
+            navigator.geolocation.getCurrentPosition(pos => {
+                const newLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                if(!appState.userLocation || Math.abs(appState.userLocation.lat - newLoc.lat) > 0.0001) {
+                    appState.userLocation = newLoc;
+                    if (window._updateDetailsLoc) window._updateDetailsLoc();
+                }
+                if (callback) callback(appState.userLocation);
+            }, null, { enableHighAccuracy: true, timeout: 5000 });
+        };
+        window.requestLocation();
     } catch (e) { console.error(e); }
 });
+
+window.setManualLocation = () => {
+    const loc = prompt("Enter your City or Area name (e.g. 'Bangalore' or 'Kottayam'):");
+    if(loc) {
+        appState.manualLocationName = loc;
+        appState.userLocation = null; // Clear coordinates to prioritize name
+        alert("Location set to: " + loc);
+        if (window._updateDetailsLoc) window._updateDetailsLoc();
+    }
+};
 
 // --- UI & CURSOR ---
 function initCursor() {
@@ -124,32 +149,37 @@ window.showResults = async () => {
     document.getElementById('results-page').classList.add('active');
     container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:5rem;"><i class="fas fa-circle-notch fa-spin" style="font-size:4rem; color:var(--primary);"></i><h3>Finding Nearest Spots...</h3></div>`;
 
-    // 1. Get Location
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-        const uLat = pos.coords.latitude;
-        const uLng = pos.coords.longitude;
-        appState.userLocation = { lat: uLat, lng: uLng };
+    const startSearch = async (coords) => {
+        const uLat = coords.lat;
+        const uLng = coords.lng;
+        appState.userLocation = coords;
 
         try {
-            // 2. Fetch from Backend
             const response = await fetch('http://localhost:3000/api/recommend', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ cuisine: appState.preferences.cuisine })
             });
             let data = await response.json();
 
-            // 3. Client-side Sort by Distance (Strictly under 10km prioritized)
-            data = data.map(r => ({
-                ...r,
-                distance: getDistanceFromLatLonInKm(uLat, uLng, r.lat, r.lng)
-            })).sort((a, b) => a.distance - b.distance);
+            data = data.map(r => {
+                const dist = (r.lat && r.lng) ? getDistanceFromLatLonInKm(uLat, uLng, r.lat, r.lng) : 9999;
+                return { ...r, distance: dist };
+            }).sort((a, b) => a.distance - b.distance);
 
             currentResults = data;
             renderList(data);
         } catch (err) { container.innerHTML = `<h3>Server connection lost.</h3>`; }
-    }, () => {
-        container.innerHTML = `<div style="text-align:center; padding:5rem;"><i class="fas fa-map-marker-alt" style="font-size:4rem; opacity:0.3;"></i><h3>Please allow location access to see nearest restaurants.</h3></div>`;
-    }, { enableHighAccuracy: true });
+    };
+
+    if (appState.userLocation) {
+        startSearch(appState.userLocation);
+    } else {
+        navigator.geolocation.getCurrentPosition(pos => {
+            startSearch({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        }, () => {
+            container.innerHTML = `<div style="text-align:center; padding:5rem;"><i class="fas fa-map-marker-alt" style="font-size:4rem; opacity:0.3;"></i><h3>Location access required.</h3><button class="btn-login" onclick="window.requestLocation(() => showResults())" style="margin-top:1rem;">Retry Detection</button></div>`;
+        }, { enableHighAccuracy: true });
+    }
 };
 
 function renderList(list) {
@@ -161,13 +191,23 @@ function renderList(list) {
         return;
     }
 
-    list.forEach((r, idx) => {
+    // ONLY SHOW THE NEAREST RESTAURANT
+    const nearestOnly = [list[0]];
+
+    nearestOnly.forEach((r, idx) => {
         const isNearest = idx === 0 && r.distance < 10;
         const div = document.createElement('div');
         div.className = 'premium-card';
+        const fallbackImg = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500';
+        
+        // Filter for approved dishes and prepare for display
+        const approvedDishes = (r.dishes || []).filter(d => d.status === 'approved');
+        const dishesHtml = approvedDishes.slice(0, 3).map(d => `<span>${d.name}</span>`).join('') || '<span>Tasty Selection</span>';
+        const dishesMore = approvedDishes.length > 3 ? `<span class="tag-sm" style="font-size:0.75rem; background:var(--background); padding:0.3rem 0.6rem; border-radius:6px; border:1px solid var(--border);">+${approvedDishes.length - 3} more</span>` : '';
+
         div.innerHTML = `
             <div class="card-image-wrap">
-                <img src="${r.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500'}">
+                <img src="${(r.image && r.image.trim() !== '') ? r.image : fallbackImg}">
                 <div class="card-overlay-badge">${r.rating} ★</div>
                 ${isNearest ? '<div class="nearest-badge">NEAREST TO YOU</div>' : ''}
             </div>
@@ -181,6 +221,9 @@ function renderList(list) {
                 </div>
                 <div class="tag-row" style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
                     ${(r.facilities || []).slice(0, 3).map(f => `<span class="tag-sm" style="font-size:0.75rem; background:var(--background); padding:0.3rem 0.6rem; border-radius:6px; border:1px solid var(--border);">${f}</span>`).join('')}
+                </div>
+                <div class="tag-row" style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    ${dishesHtml} ${dishesMore}
                 </div>
                 <button class="view-btn-premium" onclick="openDetails(${r.id})">Explore Menu & Map <i class="fas fa-chevron-right"></i></button>
             </div>
@@ -208,19 +251,21 @@ window.openDetails = async (id) => {
         });
     }
 
-    const dishes = r.dishes || [
-        { name: "Signature Special", price: 450, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200" },
-        { name: "Chef's Delight", price: 320, img: "https://images.unsplash.com/photo-1567620905732-2d1ec7bb7445?w=200" }
-    ];
+    // Show approved dishes to everyone, but show ALL dishes (even pending) to the owner
+    const isOwner = appState.user && appState.user.email === r.ownerEmail;
+    const approvedMenu = (r.dishes || []).filter(d => isOwner || d.status === 'approved');
+
+    const fallbackHero = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1000';
+    const fallbackDish = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200';
 
     document.getElementById('details-body').innerHTML = `
         <div class="details-hero">
-            <img src="${r.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1000'}" class="details-hero-img">
+            <img src="${(r.image && r.image.trim() !== '') ? r.image : fallbackHero}" class="details-hero-img">
             <div class="details-overlay-info">
                 <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1rem;">
                     <div>
                         <h1 style="font-size:3.5rem; margin-bottom:0.5rem; font-family:var(--font-heading); line-height:1;">${r.name}</h1>
-                        <p style="font-size:1.1rem; opacity:0.9;"><i class="fas fa-map-marker-alt"></i> ${r.cuisine} • ${r.distance < 1 ? (r.distance*1000).toFixed(0) + ' m' : r.distance.toFixed(1) + ' km'} away</p>
+                        <p id="details-hero-dist" style="font-size:1.1rem; opacity:0.9;"><i class="fas fa-map-marker-alt"></i> ${r.cuisine} • ${r.distance ? (r.distance < 1 ? (r.distance*1000).toFixed(0) + ' m' : r.distance.toFixed(1) + ' km') : 'calculating...'} away</p>
                     </div>
                     <div style="background:rgba(255,255,255,0.2); backdrop-filter:blur(10px); padding:0.8rem 1.5rem; border-radius:16px; border:1px solid rgba(255,255,255,0.3);">
                         <div style="font-size:0.8rem; text-transform:uppercase; font-weight:700; opacity:0.8;">Avg. Rating</div>
@@ -235,10 +280,10 @@ window.openDetails = async (id) => {
                     <h3 style="font-family:var(--font-heading); font-size:2rem;">House Specialties</h3>
                     <span class="tag-sm" style="background:var(--primary); color:white; border:none; padding:0.4rem 1rem;">Full Menu</span>
                 </div>
-                <div class="dish-grid-modern">
-                    ${dishes.map(d => `
+                <div class="dish-grid-modern" id="details-menu-grid">
+                    ${approvedMenu.map(d => `
                         <div class="dish-card-modern">
-                            <img src="${d.img || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200'}">
+                            <img src="${(d.img && d.img.trim() !== '') ? d.img : fallbackDish}">
                             <div class="dish-details">
                                 <h4 style="font-size:1.2rem; margin-bottom:0.2rem;">${d.name}</h4>
                                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -257,20 +302,63 @@ window.openDetails = async (id) => {
             <div class="details-map-side">
                 <div class="premium-glass" style="padding:2rem; border-radius:28px; box-shadow:var(--shadow-lg); border:1px solid var(--border);">
                     <h3 style="margin-bottom:1.5rem; font-family:var(--font-heading);">Location & Route</h3>
-                    <div id="map" style="height: 350px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 2rem; z-index:1;"></div>
+                    <div id="map-container" style="height: 350px; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 2rem; z-index:1;">
+                        <iframe width="100%" height="100%" frameborder="0" style="border:0" 
+                            src="https://www.google.com/maps?q=${r.lat},${r.lng}&t=&z=17&ie=UTF8&iwloc=&output=embed" allowfullscreen>
+                        </iframe>
+                    </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
                          <div style="background:var(--background); padding:1rem; border-radius:16px; text-align:center;">
                             <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Distance</div>
-                            <div style="font-weight:700;">${r.distance.toFixed(1)} km</div>
+                            <div id="details-dist" style="font-weight:700;">N/A</div>
                          </div>
                          <div style="background:var(--background); padding:1rem; border-radius:16px; text-align:center;">
                             <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted);">Est. Time</div>
-                            <div style="font-weight:700;">${Math.ceil(r.distance * 3)} mins</div>
+                            <div id="details-time" style="font-weight:700;">N/A</div>
                          </div>
                     </div>
-                    <button class="btn-login" style="width:100%; padding:1.2rem; font-size:1.1rem; border-radius:18px; display:flex; align-items:center; justify-content:center; gap:0.8rem;" onclick="window.open('https://www.google.com/maps/dir/?api=1&origin=${appState.userLocation.lat},${appState.userLocation.lng}&destination=${r.lat},${r.lng}')">
-                        <i class="fas fa-location-arrow"></i> Get Directions
-                    </button>
+                     <div id="gps-status-bar" style="display:flex; align-items:center; justify-content:center; gap:0.5rem; font-size:0.75rem; margin-bottom:1rem; padding:0.5rem; background:rgba(0,0,0,0.03); border-radius:12px;">
+                         <span id="gps-dot" style="width:8px; height:8px; border-radius:50%; background:#ccc;"></span>
+                         <span id="gps-text">Waiting for GPS...</span>
+                         <button class="btn-ghost" onclick="setManualLocation()" style="color:var(--primary); text-decoration:underline; font-size:0.7rem; padding:0; margin-left:auto;">(Use City Name instead)</button>
+                     </div>
+                     <button id="gmaps-dir-btn" class="btn-login" style="width:100%; padding:1.2rem; font-size:1.1rem; border-radius:18px; display:flex; align-items:center; justify-content:center; gap:0.8rem;" onclick="goToDirections(${r.lat}, ${r.lng})">
+                         <i class="fas fa-directions"></i> Get Exact Directions
+                     </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="reviews-section" style="padding: 2rem 5%; background: var(--background);">
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <h3 style="font-family: var(--font-heading); font-size: 2rem; margin-bottom: 1.5rem;">Guest Reviews</h3>
+                
+                ${appState.user ? `
+                    <div class="review-box premium-glass" style="padding:1.5rem; margin-bottom:2rem; border-radius:16px; border:1px solid var(--border);">
+                        <h4 style="margin-bottom:1rem;">Write a Review</h4>
+                        <div style="display:flex; gap:0.5rem; margin-bottom:1rem; color:var(--secondary);" id="review-stars-input">
+                            ${[1,2,3,4,5].map(s => `<i class="far fa-star" onclick="setReviewRating(${s})" style="cursor:pointer; font-size:1.2rem;" data-val="${s}"></i>`).join('')}
+                        </div>
+                        <textarea id="review-comment" placeholder="Share your experience..." style="width:100%; padding:1rem; border-radius:12px; border:1px solid var(--border); background:var(--background-alt); margin-bottom:1rem; min-height:100px;"></textarea>
+                        <button class="btn-primary-glow" style="padding:0.8rem 2rem;" onclick="submitReview(${r.id})">Post Review</button>
+                    </div>
+                ` : `
+                    <div style="padding:1.5rem; text-align:center; background:var(--background-alt); border-radius:16px; margin-bottom:2rem;">
+                        <p>Please <a href="#" onclick="document.getElementById('login-btn').click(); return false;">Login</a> to post a review.</p>
+                    </div>
+                `}
+
+                <div id="reviews-list">
+                    ${(r.reviews || []).length > 0 ? r.reviews.map(rev => `
+                        <div class="review-card" style="padding:1.5rem; border-bottom:1px solid var(--border);">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
+                                <div style="font-weight:700;">${rev.user}</div>
+                                <div style="color:var(--text-muted); font-size:0.8rem;">${rev.date}</div>
+                            </div>
+                            <div style="color:var(--secondary); margin-bottom:0.5rem;">${'★'.repeat(rev.rating)}${'☆'.repeat(5-rev.rating)}</div>
+                            <p style="color:var(--text-main); font-size:0.95rem;">${rev.comment}</p>
+                        </div>
+                    `).join('') : '<p style="text-align:center; opacity:0.5; padding:2rem;">No reviews yet. Be the first!</p>'}
                 </div>
             </div>
         </div>
@@ -278,34 +366,102 @@ window.openDetails = async (id) => {
 
     document.getElementById('details-modal').style.display = 'flex';
 
-    setTimeout(() => {
-        if (map) map.remove();
-        map = L.map('map').setView([r.lat, r.lng], 15);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; CartoDB' }).addTo(map);
+    // Distance/Time logic refinement
+    const updateLocUI = () => {
+        const distEl = document.getElementById('details-dist');
+        const timeEl = document.getElementById('details-time');
+        const heroDistEl = document.getElementById('details-hero-dist');
+        const gpsDot = document.getElementById('gps-dot');
+        const gpsText = document.getElementById('gps-text');
+        if (!distEl || !timeEl || !gpsDot) return;
+        
+        if (appState.userLocation && r.lat && r.lng) {
+            const distance = getDistanceFromLatLonInKm(appState.userLocation.lat, appState.userLocation.lng, r.lat, r.lng);
+            const travelTime = Math.ceil((distance / 25) * 60) + 5; 
+            const distStr = distance < 1 ? `${(distance*1000).toFixed(0)} m` : `${distance.toFixed(1)} km`;
+            
+            distEl.innerText = `${distStr} from you`;
+            timeEl.innerText = `~${travelTime} mins travel`;
+            if(heroDistEl) heroDistEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${r.cuisine} • ${distStr} away`;
+            
+            gpsDot.style.background = "#4caf50";
+            gpsText.innerText = `GPS Lock: ${appState.userLocation.lat.toFixed(2)}, ${appState.userLocation.lng.toFixed(2)}`;
+        } else if (appState.manualLocationName) {
+            distEl.innerText = "Location Set";
+            timeEl.innerText = "Check Maps";
+            gpsDot.style.background = "#2196f3";
+            gpsText.innerText = `Using: ${appState.manualLocationName}`;
+        } else {
+            distEl.innerText = "Calculating...";
+            gpsDot.style.background = "#ff9800";
+            gpsText.innerText = "Finding you...";
+        }
+    };
 
-        const uLat = appState.userLocation.lat;
-        const uLng = appState.userLocation.lng;
+    updateLocUI();
+    if (!appState.userLocation && !appState.manualLocationName) window.requestLocation();
+    window._updateDetailsLoc = updateLocUI;
+};
 
-        // User Pulse Marker
-        const pulseIcon = L.divIcon({
-            className: '',
-            html: `<div style="position:relative; width:16px; height:16px;"><div style="background:var(--primary); width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 0 0 rgba(255,107,53,0.6); animation: pulse-ring 1.5s infinite;"></div></div>`,
-            iconSize: [20, 20], iconAnchor: [10, 10]
+// GLOBAL DIRECTIONS HANDLER
+window.goToDirections = (dLat, dLng) => {
+    let origin = 'My+Location'; // Standard keyword for browser detection
+    
+    if (appState.userLocation) {
+        origin = `${appState.userLocation.lat},${appState.userLocation.lng}`;
+    } else if (appState.manualLocationName) {
+        origin = encodeURIComponent(appState.manualLocationName);
+    }
+    
+    // Explicitly use Google's directions API with driving mode
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dLat},${dLng}&travelmode=driving`;
+    window.open(url, '_blank');
+};
+
+window.detectUserLocation = () => {
+    const distEl = document.getElementById('details-dist');
+    if (distEl) distEl.innerText = "Detecting...";
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+            appState.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            if (window._updateDetailsLoc) window._updateDetailsLoc();
+        }, () => {
+            if (distEl) distEl.innerText = "Location denied.";
+        }, { enableHighAccuracy: true, timeout: 10000 });
+    }
+};
+
+let currentReviewRating = 0;
+window.setReviewRating = (rating) => {
+    currentReviewRating = rating;
+    document.querySelectorAll('#review-stars-input i').forEach(star => {
+        const val = parseInt(star.getAttribute('data-val'));
+        star.className = val <= rating ? 'fas fa-star' : 'far fa-star';
+    });
+};
+
+window.submitReview = async (resId) => {
+    const comment = document.getElementById('review-comment').value;
+    if (currentReviewRating === 0) return alert("Please pick a rating!");
+    if (!comment) return alert("Please write a comment!");
+
+    const review = {
+        user: appState.user.name,
+        rating: currentReviewRating,
+        comment: comment,
+        date: new Date().toLocaleDateString()
+    };
+
+    try {
+        const res = await fetch('http://localhost:3000/api/restaurant/add_review', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ restaurantId: resId, review })
         });
-        L.marker([uLat, uLng], { icon: pulseIcon }).addTo(map).bindPopup("You are here");
-
-        // Restaurant Pin
-        const resIcon = L.divIcon({
-            className: '',
-            html: `<div style="background:white; border:3px solid var(--primary); border-radius:50% 50% 50% 0; width:28px; height:28px; transform:rotate(-45deg); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.2);"><span style="transform:rotate(45deg); font-size:12px;">🍽️</span></div>`,
-            iconSize: [28, 28], iconAnchor: [14, 28]
-        });
-        L.marker([r.lat, r.lng], { icon: resIcon }).addTo(map).bindPopup(`<b>${r.name}</b>`).openPopup();
-
-        // Direction line
-        L.polyline([[uLat, uLng], [r.lat, r.lng]], { color: 'var(--primary)', weight: 3, dashArray: '10, 10', opacity: 0.7 }).addTo(map);
-        map.fitBounds([[uLat, uLng], [r.lat, r.lng]], { padding: [40, 40] });
-    }, 200);
+        if (res.ok) {
+            alert("Review submitted!");
+            openDetails(resId);
+        }
+    } catch (err) { alert("Failed to post review"); }
 };
 
 // --- AUTH UI ---
@@ -323,6 +479,8 @@ function setupAuth() {
         appState.emailVerified = false;
         document.getElementById('signup-fields').style.display = appState.isSignup ? 'block' : 'none';
         document.getElementById('user-verify-section').style.display = appState.isSignup ? 'block' : 'none';
+        document.getElementById('login-otp-section').style.display = 'none';
+        document.getElementById('login-password').style.display = 'block';
         document.getElementById('auth-submit-btn').textContent = appState.isSignup ? 'Create Account' : 'Sign In';
         authToggle.textContent = appState.isSignup ? 'Already have an account? Login' : "Don't have an account? Sign Up";
     };
@@ -331,13 +489,20 @@ function setupAuth() {
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
         const name = document.getElementById('reg-name').value;
+        const otp = document.getElementById('login-otp-input').value;
 
         if (appState.isSignup && !appState.emailVerified) {
             alert("Please verify your email first.");
             return;
         }
         const url = appState.isSignup ? '/api/auth/register' : '/api/auth/login';
-        const body = appState.isSignup ? { email, password, name, role: 'user' } : { email, password };
+        const body = appState.isSignup ? { email, password, name, role: 'user' } : { email, password, otp };
+        const btn = document.getElementById('auth-submit-btn');
+        const originalText = btn.textContent;
+
+        btn.disabled = true;
+        btn.textContent = "Processing...";
+
         try {
             const res = await fetch(`http://localhost:3000${url}`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -346,18 +511,49 @@ function setupAuth() {
             const data = await res.json();
             if (data.success) {
                 if (appState.isSignup) { 
-                    alert("Welcome! Sign in to continue."); 
+                    alert("Welcome to SAVOUR! Please sign in with your new account."); 
                     appState.isSignup = false; 
                     authToggle.click(); 
+                } else if (data.otp_required) {
+                    document.getElementById('login-otp-section').style.display = 'block';
+                    document.getElementById('login-password').style.display = 'none';
+                    document.getElementById('auth-submit-btn').textContent = 'Verify & Sign In';
+                    alert("OTP sent to your email!");
                 } else {
                     appState.user = data.user;
                     localStorage.setItem('user', JSON.stringify(data.user));
                     authModal.style.display = 'none';
+                    // Reset UI
+                    document.getElementById('login-otp-section').style.display = 'none';
+                    document.getElementById('login-password').style.display = 'block';
+                    document.getElementById('auth-submit-btn').textContent = 'Sign In';
+                    
                     updateAuthUI();
                     loadUserHistory();
+                    if(data.user.role === 'partner') {
+                        if(confirm("Welcome back, Partner! Would you like to go to your Dashboard?")) {
+                            window.location.href = 'owner.html';
+                        }
+                    }
                 }
-            } else { alert(data.message || "Authentication failed."); }
-        } catch (err) { alert("Check server connection."); }
+            } else { 
+                alert(data.message || "Authentication failed."); 
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        } catch (err) { 
+            alert("Server connection failed. Please ensure the server is running."); 
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+        finally {
+            if (!appState.user) {
+                btn.disabled = false;
+                if (!document.getElementById('login-otp-section').style.display || document.getElementById('login-otp-section').style.display === 'none') {
+                    btn.textContent = originalText;
+                }
+            }
+        }
     };
 
     document.querySelectorAll('.close-modal').forEach(btn => btn.onclick = () => btn.closest('.modal').style.display = 'none');
@@ -366,12 +562,15 @@ function setupAuth() {
 
 function updateAuthUI() {
     const loginBtn = document.getElementById('login-btn');
+    const dashBtn = document.getElementById('dashboard-btn');
     if (appState.user) {
         loginBtn.textContent = `Logout (${appState.user.name})`;
         document.getElementById('user-history-section').style.display = 'block';
+        if(appState.user.role === 'partner' && dashBtn) dashBtn.style.display = 'inline-block';
     } else {
         loginBtn.textContent = 'Login';
         document.getElementById('user-history-section').style.display = 'none';
+        if(dashBtn) dashBtn.style.display = 'none';
     }
 }
 

@@ -153,7 +153,12 @@
             <div id="login-fields">
                 <div class="input-group"><input type="email" id="p-login-email" placeholder="Email Address"></div>
                 <div class="input-group"><input type="password" id="p-login-pass" placeholder="Password"></div>
-                <button class="btn-login" style="width: 100%;" onclick="pLogin()">Sign In</button>
+                <div id="p-login-otp-section" style="display:none; margin-bottom:1.2rem;">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Enter the 6-digit code sent to your email</p>
+                    <input type="text" id="p-login-otp-input" placeholder="000000" maxlength="6" 
+                        style="text-align:center; letter-spacing:0.5em; font-size: 1.2rem; font-weight: 700; border: 2px solid var(--primary);">
+                </div>
+                <button id="p-login-submit-btn" class="btn-login" style="width: 100%;" onclick="pLogin()">Sign In</button>
                 <p style="margin-top: 1.5rem;">New partner? <a href="#" onclick="togglePAuth(true)">Sign Up Now</a></p>
             </div>
             <div id="signup-fields" style="display: none;">
@@ -175,6 +180,7 @@
                 <div class="input-group"><input type="password" id="p-reg-pass" placeholder="Create Password"></div>
                 <hr style="margin: 1.5rem 0; opacity: 0.2;">
                 <h3 style="margin-bottom: 1rem;">Restaurant Basics</h3>
+                <div class="input-group"><input type="text" id="p-res-name" placeholder="Restaurant Name"></div>
                 <div class="input-group">
                     <label>Cuisine Type</label>
                     <select id="p-res-cuisine">
@@ -206,13 +212,21 @@
                     <label>Initial Rating</label>
                     <input type="number" id="p-res-rating" step="0.1" min="1" max="5" value="4.0">
                 </div>
-                <div class="input-group" style="text-align: left;">
+                <div class="input-group">
                     <label>Essentials</label>
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem;">
                         <label style="font-weight: 400;"><input type="checkbox" class="p-res-essentials" value="AC"> AC</label>
                         <label style="font-weight: 400;"><input type="checkbox" class="p-res-essentials" value="Wi-Fi"> Wi-Fi</label>
                         <label style="font-weight: 400;"><input type="checkbox" class="p-res-essentials" value="Parking"> Parking</label>
                     </div>
+                </div>
+                <div class="input-group">
+                    <label>Google Maps Link</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="p-res-map" placeholder="Paste link or use button ->">
+                        <button class="btn-ghost" onclick="detectPLocation()" title="Detect Current Location" style="padding: 0 1rem; border: 1px solid var(--border);"><i class="fas fa-location-arrow"></i></button>
+                    </div>
+                    <p id="p-loc-preview" style="font-size: 0.75rem; color: var(--primary); margin-top: 0.3rem; display:none;"></p>
                 </div>
                 <button class="btn-login" style="width: 100%;" onclick="pSignup()">Create Account</button>
                 <p style="margin-top: 1.5rem;">Already a partner? <a href="#" onclick="togglePAuth(false)">Sign In</a>
@@ -251,6 +265,7 @@
                             <th>Image</th>
                             <th>Item Name</th>
                             <th>Price (₹)</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -304,6 +319,13 @@
                         <label style="font-weight: 400;"><input type="checkbox" class="edit-essentials" value="Parking"> Parking</label>
                     </div>
                 </div>
+                <div class="input-group">
+                    <label>Google Maps Link</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="edit-map-link">
+                        <button class="btn-edit" title="Extract Coords" onclick="resolveEditCoords()"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                </div>
                 <hr style="margin: 1.5rem 0; opacity: 0.2;">
                 <h3>Chef Details</h3>
                 <div class="input-group"><label>Head Chef Name</label><input type="text" id="edit-chef-name"></div>
@@ -346,23 +368,53 @@
             document.getElementById('auth-title').innerText = isSignup ? 'Partner Sign Up' : 'Partner Login';
             document.getElementById('login-fields').style.display = isSignup ? 'none' : 'block';
             document.getElementById('signup-fields').style.display = isSignup ? 'block' : 'none';
+            // Reset Login UI
+            document.getElementById('p-login-otp-section').style.display = 'none';
+            document.getElementById('p-login-pass').parentElement.style.display = 'block';
+            document.getElementById('p-login-submit-btn').innerText = 'Sign In';
         }
 
         async function pLogin() {
             const email = document.getElementById('p-login-email').value;
             const pass = document.getElementById('p-login-pass').value;
+            const otp = document.getElementById('p-login-otp-input').value;
+            const btn = document.getElementById('p-login-submit-btn');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+
             try {
                 const res = await fetch('http://localhost:3000/api/auth/login', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password: pass })
+                    body: JSON.stringify({ email, password: pass, otp })
                 });
                 const data = await res.json();
-                if (data.success && data.user.role === 'partner') {
-                    currentUser = data.user;
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    showDashboard();
-                } else { alert("Login failed. Ensure you have a partner account."); }
-            } catch (e) { alert("Server error."); }
+                if (data.success) {
+                    if (data.user && data.user.role === 'partner') {
+                        currentUser = data.user;
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        await showDashboard();
+                    } else if (data.otp_required) {
+                        document.getElementById('p-login-otp-section').style.display = 'block';
+                        document.getElementById('p-login-pass').parentElement.style.display = 'none';
+                        document.getElementById('p-login-submit-btn').innerText = 'Verify & Sign In';
+                        alert("OTP sent to your email!");
+                    } else {
+                        alert("Login Error: This account does not have partner permissions.");
+                        btn.disabled = false;
+                        btn.innerText = originalText;
+                    }
+                } else { 
+                    alert(data.message || "Login failed."); 
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            } catch (e) { 
+                console.error("Login catch:", e);
+                alert("Connection failed: " + e.message); 
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
         }
 
         async function pSignup() {
@@ -375,17 +427,26 @@
             const resService = document.getElementById('p-res-service').value;
             const resRating = parseFloat(document.getElementById('p-res-rating').value);
             const resEssentials = Array.from(document.querySelectorAll('.p-res-essentials:checked')).map(cb => cb.value);
+            const gmapLink = document.getElementById('p-res-map').value;
 
-            if (!partnerVerified) return alert("Verify your business email first.");
+            // Capture detected coords if any
+            const lat = window._pDetectedLat || null;
+            const lng = window._pDetectedLng || null;
+
+            if (!partnerVerified) return alert("Verify email first.");
             try {
                 // 1. Register User
                 const uRes = await fetch('http://localhost:3000/api/auth/register', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password: pass, name, role: 'partner' })
                 });
+                
                 if (!uRes.ok) {
                     const errData = await uRes.json();
-                    return alert("User registration failed: " + (errData.message || "Unknown error"));
+                    if (errData.message !== "User already exists") {
+                        return alert("User registration failed: " + (errData.message || "Unknown error"));
+                    }
+                    console.log("User already exists, proceeding to restaurant registration...");
                 }
 
                 // 2. Register Restaurant
@@ -399,6 +460,8 @@
                         serviceMode: resService,
                         rating: resRating,
                         facilities: resEssentials,
+                        gmapLink: gmapLink,
+                        lat: lat, lng: lng, // Pass manual coords if detected
                         budget: 1000,
                         chef: { name: 'Expert Chef', exp: 5, img: '' }
                     })
@@ -414,33 +477,48 @@
         }
 
         async function showDashboard() {
+            if (!currentUser) return;
             document.getElementById('auth-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
             document.getElementById('partner-user-display').style.display = 'flex';
-            document.getElementById('p-name-top').innerText = currentUser.name;
+            document.getElementById('p-name-top').innerText = currentUser.name || "Partner";
 
-            const res = await fetch('http://localhost:3000/api/owner/restaurant_info', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ restaurantId: currentUser.restaurantId })
-            });
-            resData = await res.json();
+            try {
+                const res = await fetch('http://localhost:3000/api/owner/restaurant_info', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ restaurantId: currentUser.restaurantId })
+                });
+                if (!res.ok) throw new Error("Could not fetch restaurant details from database.");
+                resData = await res.json();
 
-            document.getElementById('disp-res-name').innerText = resData.name;
-            document.getElementById('disp-res-meta').innerText = `${resData.cuisine} Cuisine • Average ₹${resData.budget} for two`;
-            document.getElementById('pending-alert').style.display = resData.status === 'pending' ? 'block' : 'none';
-
-            renderMenu();
+                document.getElementById('disp-res-name').innerText = resData.name || "My Restaurant";
+                document.getElementById('disp-res-meta').innerText = `${resData.cuisine || 'Cuisine'} • Average ₹${resData.budget || '0'} for two`;
+                document.getElementById('pending-alert').style.display = resData.status === 'pending' ? 'block' : 'none';
+                
+                renderMenu();
+            } catch (err) {
+                console.error("Dashboard error:", err);
+                document.getElementById('disp-res-name').innerText = "Restaurant Not Found";
+                document.getElementById('disp-res-meta').innerText = "We couldn't link your account to a restaurant. Contact Admin.";
+            }
         }
 
         function renderMenu() {
             const tbody = document.getElementById('menu-tbody');
+            if(!tbody) return;
             tbody.innerHTML = '';
-            (resData.dishes || []).forEach((d, i) => {
+            if(!resData || !resData.dishes) return;
+            
+            resData.dishes.forEach((d, i) => {
                 const tr = document.createElement('tr');
+                const isApproved = d.status === 'approved';
+                const statusHtml = `<span class="tag-sm" style="background: ${isApproved ? '#dcfce7':'#fef3c7'}; color: ${isApproved ? '#166534':'#92400e'}; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem;">${d.status || 'pending'}</span>`;
+                
                 tr.innerHTML = `
                     <td><img src="${d.img || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'}" class="dish-thumb"></td>
                     <td style="font-weight:600;">${d.name}</td>
                     <td>₹${d.price}</td>
+                    <td>${statusHtml}</td>
                     <td><button class="btn-icon" style="color:var(--primary);" onclick="removeDish(${i})"><i class="fas fa-trash"></i></button></td>
                 `;
                 tbody.appendChild(tr);
@@ -448,23 +526,26 @@
         }
 
         function openEditModal() {
-            document.getElementById('edit-name').value = resData.name;
-            document.getElementById('edit-cuisine').value = resData.cuisine;
-            document.getElementById('edit-budget').value = resData.budget;
+            if (!resData) return alert("Please wait for data to load or register your restaurant.");
+            
+            document.getElementById('edit-name').value = resData.name || '';
+            document.getElementById('edit-cuisine').value = resData.cuisine || 'Indian';
+            document.getElementById('edit-budget').value = resData.budget || 0;
             document.getElementById('edit-dietary').value = resData.dietary || 'Both';
             document.getElementById('edit-service').value = resData.serviceMode || 'Dine-in';
             const facilities = resData.facilities || [];
             document.querySelectorAll('.edit-essentials').forEach(cb => {
                 cb.checked = facilities.includes(cb.value);
             });
+            document.getElementById('edit-map-link').value = resData.gmapLink || '';
             document.getElementById('edit-chef-name').value = resData.chef?.name || '';
             document.getElementById('edit-chef-exp').value = resData.chef?.exp || '';
             document.getElementById('edit-modal').style.display = 'flex';
         }
 
         function openAddDishModal() { document.getElementById('dish-modal').style.display = 'flex'; }
-        function closeModals() { document.querySelectorAll('.modal').style.display = 'none'; } // Fixed below
-        window.closeModals = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); };
+        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+        window.closeModals = closeModals;
 
         async function saveDetails() {
             resData.name = document.getElementById('edit-name').value;
@@ -473,6 +554,7 @@
             resData.dietary = document.getElementById('edit-dietary').value;
             resData.serviceMode = document.getElementById('edit-service').value;
             resData.facilities = Array.from(document.querySelectorAll('.edit-essentials:checked')).map(cb => cb.value);
+            resData.gmapLink = document.getElementById('edit-map-link').value;
             resData.chef = {
                 name: document.getElementById('edit-chef-name').value,
                 exp: document.getElementById('edit-chef-exp').value
@@ -501,7 +583,7 @@
         }
 
         async function updateServerData() {
-            await fetch('http://localhost:3000/api/owner/update_menu', {
+            const res = await fetch('http://localhost:3000/api/owner/update_menu', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     restaurantId: currentUser.restaurantId,
@@ -509,9 +591,32 @@
                     name: resData.name,
                     cuisine: resData.cuisine,
                     budget: resData.budget,
-                    chef: resData.chef
+                    chef: resData.chef,
+                    gmapLink: resData.gmapLink,
+                    dietary: resData.dietary,
+                    serviceMode: resData.serviceMode,
+                    facilities: resData.facilities
                 })
             });
+            if(res.ok) {
+                const updated = await res.json();
+                // Refresh local data to get any server-extracted coords
+                await showDashboard();
+            }
+        }
+
+        async function resolveEditCoords() {
+            const link = document.getElementById('edit-map-link').value;
+            if(!link) return alert("Paste a Google Maps link first!");
+            const btn = event.currentTarget;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            try {
+                // We use the update API to trigger a re-extraction on the server
+                await updateServerData(); 
+                alert("Coordinates resolved and updated successfully!");
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+            } catch (e) { alert("Failed to resolve link."); btn.innerHTML = '<i class="fas fa-sync-alt"></i>'; }
         }
 
         async function sendPartnerCode() {
@@ -545,6 +650,24 @@
         }
 
         function logout() { localStorage.removeItem('user'); window.location.reload(); }
+
+        function detectPLocation() {
+            if (navigator.geolocation) {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                navigator.geolocation.getCurrentPosition(pos => {
+                    window._pDetectedLat = pos.coords.latitude;
+                    window._pDetectedLng = pos.coords.longitude;
+                    document.getElementById('p-loc-preview').innerText = `Detected: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+                    document.getElementById('p-loc-preview').style.display = 'block';
+                    btn.innerHTML = '<i class="fas fa-check" style="color:#22c55e"></i>';
+                }, err => {
+                    alert("Location access denied.");
+                    btn.innerHTML = '<i class="fas fa-location-arrow"></i>';
+                });
+            } else { alert("Not supported."); }
+        }
+
         function initTheme() {
             const toggle = document.getElementById('theme-toggle');
             const saved = localStorage.getItem('theme') || 'light';

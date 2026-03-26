@@ -1,299 +1,106 @@
 [
   {
-    "id": 1,
-    "name": "Spicy Villa",
+    "ownerEmail": "adr23cs010@cea.ac.in",
+    "name": "Emarath Yemeni Mandi",
     "cuisine": "Indian",
-    "budget": "Medium",
+    "dietary": "Both",
+    "serviceMode": "Dine-in",
     "rating": 4.5,
     "facilities": [
-      "AC",
-      "Parking",
-      "Wi-Fi"
+      "Parking"
     ],
-    "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    "coords": {
-      "lat": 12.9716,
-      "lng": 77.5946
+    "gmapLink": "https://maps.app.goo.gl/nAqtmrjEHQyq8Hua8",
+    "budget": "400",
+    "chef": {
+      "name": "Chef101",
+      "exp": "10",
+      "img": ""
     },
-    "isVeg": false,
-    "tags": [
-      "Spicy",
-      "Curry",
-      "Family"
-    ],
+    "id": 1774464057,
+    "status": "approved",
+    "lat": 9.1375046,
+    "lng": 76.7349334,
     "dishes": [
       {
-        "name": "Butter Chicken",
-        "price": 450,
-        "img": "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=200"
+        "name": "Al Faham",
+        "price": 180,
+        "img": "https://tse1.mm.bing.net/th/id/OIP.dpeE4z0YF2inS8foSwWjXAHaFc?rs=1&pid=ImgDetMain&o=7&rm=3",
+        "status": "approved"
       },
       {
-        "name": "Garlic Naan",
-        "price": 60,
-        "img": "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?w=200"
-      },
-      {
-        "name": "Paneer Tikka",
-        "price": 320,
-        "img": "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=200"
+        "name": "Kuzhi Mandi",
+        "price": 250,
+        "img": "https://cdn.siasat.com/wp-content/uploads/2023/03/mandi.png",
+        "status": "approved"
       }
     ],
-    "chef": {
-      "name": "Chef Kapoor",
-      "exp": 15,
-      "img": "https://images.unsplash.com/photo-1583394293214-28dead15654e?w=200"
-    }
+    "reviews": [
+      {
+        "user": "Test_AJ",
+        "rating": 5,
+        "comment": "Good food. Really good service!!",
+        "date": "26/3/2026"
+      }
+    ]
   },
   {
-    "id": 2,
-    "name": "Burger Barn",
-    "cuisine": "American",
-    "budget": "Low",
-    "rating": 4.0,
+    "ownerEmail": "adarshadur123@gmail.com",
+    "name": "Pepino Restaurant & Caterers",
+    "cuisine": "Chinese",
+    "dietary": "Both",
+    "serviceMode": "Dine-in",
+    "rating": 4,
     "facilities": [
       "AC",
       "Parking"
     ],
-    "image": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    "coords": {
-      "lat": 12.978,
-      "lng": 77.6
-    },
-    "isVeg": false,
-    "tags": [
-      "Burgers",
-      "Fast Food",
-      "Cheesy"
-    ]
-  },
-  {
-    "id": 3,
-    "name": "Sushi World",
-    "cuisine": "Japanese",
-    "budget": "High",
-    "rating": 4.8,
-    "facilities": [
-      "AC",
-      "Parking",
-      "Private Dining"
-    ],
-    "image": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    "coords": {
-      "lat": 12.96,
-      "lng": 77.58
-    },
-    "isVeg": false,
-    "tags": [
-      "Sushi",
-      "Authentic",
-      "Premium"
-    ]
-  },
-  {
-    "id": 4,
-    "name": "Pasta Point",
-    "cuisine": "Italian",
-    "budget": "Medium",
-    "rating": 4.2,
-    "facilities": [
-      "AC",
-      "Wi-Fi"
-    ],
-    "image": "https://images.unsplash.com/photo-1481931098730-318b6f776db0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    "coords": {
-      "lat": 12.985,
-      "lng": 77.59
-    },
-    "isVeg": true,
-    "tags": [
-      "Pasta",
-      "Vegetarian Friendly",
-      "Cozy"
-    ]
-  },
-  {
-    "id": 5,
-    "name": "Taco Fiesta",
-    "cuisine": "Mexican",
-    "budget": "Low",
-    "rating": 4.3,
-    "facilities": [
-      "Outdoor Seating"
-    ],
-    "image": "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    "coords": {
-      "lat": 12.97,
-      "lng": 77.61
-    },
-    "isVeg": false,
-    "tags": [
-      "Tacos",
-      "Spicy",
-      "Quick"
-    ]
-  },
-  {
-    "id": 6,
-    "name": "The Golden Dragon",
-    "cuisine": "Chinese",
-    "budget": "Medium",
-    "rating": 4.1,
-    "facilities": [
-      "AC",
-      "Parking",
-      "Banquet"
-    ],
-    "image": "https://images.unsplash.com/photo-1525164286253-04e68b9d94c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    "coords": {
-      "lat": 12.955,
-      "lng": 77.595
-    },
-    "isVeg": false,
-    "tags": [
-      "Noodles",
-      "Dim Sum",
-      "Family"
-    ]
-  },
-  {
-    "id": 7,
-    "name": "Cafe Mocha",
-    "cuisine": "Cafe",
-    "budget": "Low",
-    "rating": 4.6,
-    "facilities": [
-      "Wi-Fi",
-      "AC",
-      "Books"
-    ],
-    "image": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    "coords": {
-      "lat": 12.965,
-      "lng": 77.585
-    },
-    "isVeg": true,
-    "tags": [
-      "Coffee",
-      "Books",
-      "Relaxed"
-    ]
-  },
-  {
-    "id": 8,
-    "name": "Royal Feast",
-    "cuisine": "Indian",
-    "budget": "High",
-    "rating": 4.9,
-    "facilities": [
-      "AC",
-      "Parking",
-      "Valet",
-      "Live Music"
-    ],
-    "image": "https://images.unsplash.com/photo-1585937421612-70a008356f36?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    "coords": {
-      "lat": 12.99,
-      "lng": 77.62
-    },
-    "isVeg": false,
-    "tags": [
-      "Royal",
-      "Buffet",
-      "Luxury"
-    ]
-  },
-  {
-    "id": 9,
-    "name": "Green Greens",
-    "cuisine": "Continental",
-    "budget": "Medium",
-    "rating": 4.4,
-    "facilities": [
-      "Wi-Fi",
-      "Outdoor Seating"
-    ],
-    "image": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    "coords": {
-      "lat": 12.975,
-      "lng": 77.59
-    },
-    "isVeg": true,
-    "tags": [
-      "Healthy",
-      "Salads",
-      "Vegan"
-    ]
-  },
-  {
-    "id": 10,
-    "name": "Mediterranean Mind",
-    "cuisine": "Mediterranean",
-    "budget": "High",
-    "rating": 4.7,
-    "facilities": [
-      "AC",
-      "Parking",
-      "Rooftop"
-    ],
-    "image": "https://images.unsplash.com/photo-1544148103-0773bf10d330?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-    "coords": {
-      "lat": 12.96,
-      "lng": 77.605
-    },
-    "isVeg": false,
-    "tags": [
-      "Hummus",
-      "Falafel",
-      "View"
-    ]
-  },
-  {
-    "ownerEmail": "annankada@gmail.com",
-    "name": "Annan Kada",
-    "cuisine": "Indian",
-    "budget": "100",
+    "gmapLink": "https://maps.app.goo.gl/wWhPvjf3rByqncv97",
+    "lat": 9.1566776,
+    "lng": 76.7240148,
+    "budget": "200",
     "chef": {
-      "name": "Expert Chef",
-      "exp": "5"
+      "name": "Expert Chef 102",
+      "exp": "5",
+      "img": ""
     },
-    "id": 1772734683,
+    "id": 1774470565,
     "status": "approved",
     "dishes": [
       {
-        "name": "vada",
-        "price": 150,
-        "img": ""
+        "name": "Schezwan Noodles",
+        "price": 200,
+        "img": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_960,w_960//InstamartAssets/schezwan_noodles.webp",
+        "status": "pending"
       }
     ]
   },
   {
-    "ownerEmail": "arabian@gmail.com",
-    "name": "Arabian Bakerty",
+    "ownerEmail": "adarsh0612j@gmail.com",
+    "name": "Padma Cafe",
     "cuisine": "Indian",
-    "budget": "1000",
+    "dietary": "Veg",
+    "serviceMode": "All",
+    "rating": 4,
+    "facilities": [
+      "Parking"
+    ],
+    "gmapLink": "https://maps.app.goo.gl/s5J8ibUnmfBFcrem7",
+    "lat": 9.141172655493591,
+    "lng": 76.72300388179008,
+    "budget": "300",
     "chef": {
-      "name": "Expert Chef",
-      "exp": "5"
+      "name": "Expert Chef 103",
+      "exp": "5",
+      "img": ""
     },
-    "id": 1773281127,
+    "id": 1774472407,
     "status": "approved",
-    "lat": 12.991990074925988,
-    "lng": 77.62548361949271,
     "dishes": [
       {
-        "name": "Cold Boot",
-        "price": 100,
-        "img": "https://www.instagram.com/p/C8JIhkWI95m/"
-      },
-      {
-        "name": "Biriyani",
-        "price": 200,
-        "img": "https://healux.in/recipe/chicken-biriyani/"
-      },
-      {
-        "name": "sharjahh",
-        "price": 150,
-        "img": ""
+        "name": "Sadya",
+        "price": 285,
+        "img": "https://www.livelaw.in/h-upload/2023/04/26/1500x900_470011-onam-sadya.webp",
+        "status": "pending"
       }
     ]
   }
